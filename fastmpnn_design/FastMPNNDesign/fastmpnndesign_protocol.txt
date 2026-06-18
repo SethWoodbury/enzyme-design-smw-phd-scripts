@@ -1,0 +1,23 @@
+scale:coordinate_constraint 1.0
+scale:fa_rep 0.150
+mpnn 0.4
+repack
+scale:fa_rep 0.200
+min 0.01
+scale:coordinate_constraint 0.5
+scale:fa_rep 0.365
+mpnn 0.2
+repack
+scale:fa_rep 0.480
+min 0.01
+scale:coordinate_constraint 0.0
+scale:fa_rep 0.659
+mpnn 0.1
+repack
+scale:fa_rep 0.750
+min 0.01
+scale:coordinate_constraint 0.0
+scale:fa_rep 1
+mpnn 0.1
+repack
+min 0.00001

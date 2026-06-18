@@ -1,0 +1,69 @@
+import sys, os
+import pymol
+from pymol import cmd
+import gzip, bz2
+import re
+import string
+import subprocess
+from MoleculeUtils import colorCPK
+
+def zload_parent(format_string):
+    # format_string = sys.argv[1]
+
+    pdbname = cmd.get_object_list()[0]
+
+    get_parent = "/Users/brian/python_scripts/local_bcov_scripts/get_parent.py"
+
+    def read_pdb( fname ):
+        if os.path.exists( fname + ".pdb.gz" ):
+            return gzip.open(fname + ".pdb.gz" )
+        elif os.path.exists( fname + ".pdb" ):
+            return open( fname + ".pdb" )
+        elif os.path.exist( fname + ".pdb.bz2" ):
+            return open( fname + ".pdb.bz2" )
+        else:
+            return False
+
+
+    def zcmd(command, wait=True):
+        # print ""
+        # print command
+        the_command = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+        if (not wait):
+            return
+        the_stuff = the_command.communicate()
+        return str(the_stuff[0]) + str(the_stuff[1])
+
+
+    result = zcmd("python %s %s %s"%(get_parent, pdbname, format_string)).strip()
+    if ( len(result.split("\n")) != 1):
+        print(result)
+        sys.exit()
+
+    output = result.split("\n")[0]
+
+    if ( len(output.split()) != 2):
+        print(result)
+        sys.exit()
+
+    parent = output.split()[0]
+
+    my_view= cmd.get_view(output=1)
+
+    cmd.load(parent, "parent")
+    cmd.align("parent", pdbname)
+    cmd.show("lines", "parent")
+    # cmd.show("cartoon", "parent")
+    cmd.hide("everything", "elem H and parent")
+    cmd.color("gray50", "parent")
+    colorCPK("parent", "gray50")
+    
+    cmd.set_view(my_view)
+
+    
+
+
+cmd.extend( 'parent', zload_parent )
+
+
+

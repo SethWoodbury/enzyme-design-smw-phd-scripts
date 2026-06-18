@@ -1,0 +1,308 @@
+{
+  "input_pdb": "/home/woodbuse/special_scripts/upgraded_fastMPNNdesign/modules/step01__catres_alignment/test/input_pdb.pdb",
+  "ref_pdb": "/home/woodbuse/special_scripts/upgraded_fastMPNNdesign/modules/step01__catres_alignment/test/ref_pdb.pdb",
+  "output_pdb": "/home/woodbuse/special_scripts/upgraded_fastMPNNdesign/modules/step02__constrained_cart_relax/test/step01_outputs/input_pdb_aligned.pdb",
+  "exclude_bb_only_hbond_constraints": false,
+  "flex_res_move_all_sc": false,
+  "flex_res_constrain_all_sc": false,
+  "residue_constraints": {
+    "1": {
+      "chain": "A",
+      "resno": 13,
+      "resname": "HIS",
+      "constrain_atoms": [
+        "CB",
+        "CD2",
+        "CE1",
+        "CG",
+        "HD1",
+        "ND1",
+        "NE2"
+      ],
+      "backbone_important": false,
+      "sidechain_important": true,
+      "importance": "sidechain",
+      "backbone_important_only_for_BB_BB_hbond": true
+    },
+    "2": {
+      "chain": "A",
+      "resno": 15,
+      "resname": "HIS",
+      "constrain_atoms": [
+        "CB",
+        "CD2",
+        "CE1",
+        "CG",
+        "HD1",
+        "ND1",
+        "NE2"
+      ],
+      "backbone_important": false,
+      "sidechain_important": true,
+      "importance": "sidechain",
+      "backbone_important_only_for_BB_BB_hbond": false
+    },
+    "3": {
+      "chain": "A",
+      "resno": 176,
+      "resname": "HIS",
+      "constrain_atoms": [
+        "CB",
+        "CD2",
+        "CE1",
+        "CG",
+        "HE2",
+        "ND1",
+        "NE2"
+      ],
+      "backbone_important": false,
+      "sidechain_important": true,
+      "importance": "sidechain",
+      "backbone_important_only_for_BB_BB_hbond": false
+    },
+    "4": {
+      "chain": "A",
+      "resno": 203,
+      "resname": "HIS",
+      "constrain_atoms": [
+        "C",
+        "CA",
+        "CB",
+        "CD2",
+        "CE1",
+        "CG",
+        "H",
+        "HD1",
+        "N",
+        "ND1",
+        "NE2",
+        "O"
+      ],
+      "backbone_important": true,
+      "sidechain_important": true,
+      "importance": "both",
+      "backbone_important_only_for_BB_BB_hbond": false
+    },
+    "5": {
+      "chain": "A",
+      "resno": 53,
+      "resname": "ASP",
+      "constrain_atoms": [
+        "CB",
+        "CG",
+        "OD1",
+        "OD2"
+      ],
+      "backbone_important": false,
+      "sidechain_important": true,
+      "importance": "sidechain",
+      "backbone_important_only_for_BB_BB_hbond": true
+    },
+    "6": {
+      "chain": "A",
+      "resno": 174,
+      "resname": "LYS",
+      "constrain_atoms": [
+        "1HZ",
+        "2HZ",
+        "3HZ",
+        "CD",
+        "CE",
+        "NZ"
+      ],
+      "backbone_important": false,
+      "sidechain_important": true,
+      "importance": "sidechain",
+      "backbone_important_only_for_BB_BB_hbond": false
+    },
+    "7": {
+      "chain": "A",
+      "resno": 149,
+      "resname": "TRP",
+      "constrain_atoms": [
+        "CB",
+        "CD1",
+        "CD2",
+        "CE2",
+        "CE3",
+        "CG",
+        "CH2",
+        "CZ2",
+        "CZ3",
+        "HE1",
+        "NE1"
+      ],
+      "backbone_important": false,
+      "sidechain_important": true,
+      "importance": "sidechain",
+      "backbone_important_only_for_BB_BB_hbond": false
+    },
+    "8": {
+      "chain": "A",
+      "resno": 226,
+      "resname": "HIS",
+      "constrain_atoms": [
+        "CB",
+        "CD2",
+        "CE1",
+        "CG",
+        "HE2",
+        "ND1",
+        "NE2"
+      ],
+      "backbone_important": false,
+      "sidechain_important": true,
+      "importance": "sidechain",
+      "backbone_important_only_for_BB_BB_hbond": true
+    },
+    "9": {
+      "chain": "A",
+      "resno": 206,
+      "resname": "ASP",
+      "constrain_atoms": [
+        "CB",
+        "CG",
+        "OD1",
+        "OD2"
+      ],
+      "backbone_important": false,
+      "sidechain_important": true,
+      "importance": "sidechain",
+      "backbone_important_only_for_BB_BB_hbond": true
+    },
+    "10": {
+      "chain": "A",
+      "resno": 150,
+      "resname": "PHE",
+      "constrain_atoms": [
+        "CB",
+        "CD1",
+        "CD2",
+        "CE1",
+        "CE2",
+        "CG",
+        "CZ"
+      ],
+      "backbone_important": false,
+      "sidechain_important": true,
+      "importance": "sidechain",
+      "backbone_important_only_for_BB_BB_hbond": false
+    },
+    "11": {
+      "chain": "A",
+      "resno": 229,
+      "resname": "HIS",
+      "constrain_atoms": [
+        "CB",
+        "CD2",
+        "CE1",
+        "CG",
+        "HE2",
+        "ND1",
+        "NE2"
+      ],
+      "backbone_important": false,
+      "sidechain_important": true,
+      "importance": "sidechain",
+      "backbone_important_only_for_BB_BB_hbond": true
+    },
+    "13": {
+      "chain": "A",
+      "resno": 225,
+      "resname": "ASP",
+      "constrain_atoms": [
+        "CB",
+        "CG",
+        "OD1",
+        "OD2"
+      ],
+      "backbone_important": false,
+      "sidechain_important": true,
+      "importance": "sidechain",
+      "backbone_important_only_for_BB_BB_hbond": false
+    },
+    "15": {
+      "chain": "A",
+      "resno": 55,
+      "resname": "LEU",
+      "constrain_atoms": [
+        "CB",
+        "CD1",
+        "CD2",
+        "CG"
+      ],
+      "backbone_important": false,
+      "sidechain_important": true,
+      "importance": "sidechain",
+      "backbone_important_only_for_BB_BB_hbond": false
+    },
+    "16": {
+      "chain": "A",
+      "resno": 116,
+      "resname": "ILE",
+      "constrain_atoms": [
+        "CB",
+        "CD1",
+        "CG1",
+        "CG2"
+      ],
+      "backbone_important": false,
+      "sidechain_important": true,
+      "importance": "sidechain",
+      "backbone_important_only_for_BB_BB_hbond": false
+    },
+    "17": {
+      "chain": "A",
+      "resno": 19,
+      "resname": "PHE",
+      "constrain_atoms": [
+        "CB",
+        "CD1",
+        "CD2",
+        "CE1",
+        "CE2",
+        "CG",
+        "CZ"
+      ],
+      "backbone_important": false,
+      "sidechain_important": true,
+      "importance": "sidechain",
+      "backbone_important_only_for_BB_BB_hbond": false
+    },
+    "18": {
+      "chain": "A",
+      "resno": 30,
+      "resname": "LEU",
+      "constrain_atoms": [
+        "CB",
+        "CD1",
+        "CD2",
+        "CG"
+      ],
+      "backbone_important": false,
+      "sidechain_important": true,
+      "importance": "sidechain",
+      "backbone_important_only_for_BB_BB_hbond": false
+    },
+    "19": {
+      "chain": "A",
+      "resno": 21,
+      "resname": "TYR",
+      "constrain_atoms": [
+        "CB",
+        "CD1",
+        "CD2",
+        "CE1",
+        "CE2",
+        "CG",
+        "CZ",
+        "HH",
+        "OH"
+      ],
+      "backbone_important": false,
+      "sidechain_important": true,
+      "importance": "sidechain",
+      "backbone_important_only_for_BB_BB_hbond": false
+    }
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "name": "breadth",
+  "description": "High-diversity exploration across core/shell",
+  "version": "2.2",
+  "layer_cuts": [
+    6.0,
+    8.0,
+    12.0
+  ],
+  "steps": [
+    {
+      "type": "design_core",
+      "temperature": 0.3,
+      "num_designs": 4
+    },
+    {
+      "type": "torsional_relax",
+      "repeats": 1,
+      "stages": 2
+    },
+    {
+      "type": "design_core",
+      "temperature": 0.25,
+      "num_designs": 8
+    },
+    {
+      "type": "torsional_relax",
+      "repeats": 1,
+      "stages": 2
+    },
+    {
+      "type": "design_core_shell",
+      "temperature": 0.2,
+      "num_designs": 12
+    },
+    {
+      "type": "torsional_relax",
+      "repeats": 1,
+      "stages": 2
+    }
+  ]
+}

@@ -1,0 +1,71 @@
+###############################################################################
+### DRIVER: find_nonCCD_nonRosetta_lig_codes.py                             ###
+###   MODE = "check"  -> identify if given code(s) exist in CCD/Rosetta     ###
+###   MODE = "search" -> find unused 3-letter codes per class pattern       ###
+### (exactly one mode per run)                                              ###
+###############################################################################
+
+### PICK MODE ###
+MODE = "check"          # "check" or "search"
+
+### DB SELECTION (applies to both modes) ###
+check_db = "both"       # "ccd" | "rosetta" | "both"
+
+### OPTIONAL (both modes) ###
+rosetta_txt_file = None  # None => /net/software/rosetta/main/database/chemical/residue_type_sets/fa_standard/residue_types.txt
+no_verify_ssl    = False
+timeout          = 4.0
+
+#####################  CHECK-MODE INPUTS  #####################
+# One or more explicit codes to test.
+codes_to_check = ["CO2", "ZN1", "ZZ9"]
+
+#####################  SEARCH-MODE INPUTS  ####################
+# Define classes and patterns here; ? = wildcard
+classes = {
+    "CLASS_0": "S??",
+   # "CLASS_A": "X?W",
+   # "CLASS_B": "Y?W",
+}
+letters          = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"  # characters used for '?'
+target_per_class = 1000      # number of available codes to find per class
+max_workers      = 64        # parallel HTTP workers
+batch_size       = 128       # codes per batch
+sleep_between    = 0.0       # sleep between classes
+log_every        = 500       # progress print frequency
+
+### CONSTANTS ###
+apptainer_sif = "/net/software/containers/universal.sif"
+script_path   = f"{SPECIAL_SCRIPTS_DIR}theozyme_and_ligand_handling/find_nonCCD_nonRosetta_lig_codes.py"
+
+### BUILD COMMAND (AS LIST FIRST) ###
+# CCD lookups need `requests` + network, so run inside the apptainer image.
+# (Harmless for --check rosetta too.)
+cmd_parts = ["apptainer", "exec", apptainer_sif, "python", script_path]
+
+if MODE == "check":
+    cmd_parts += ["--code", *codes_to_check]
+
+elif MODE == "search":
+    for name, pattern in classes.items():
+        cmd_parts += ["--class", f"{name}:{pattern}"]
+    if letters:                       cmd_parts += ["--letters", letters]
+    if target_per_class is not None:  cmd_parts += ["--target-per-class", str(target_per_class)]
+    if max_workers is not None:       cmd_parts += ["--max-workers", str(max_workers)]
+    if batch_size is not None:        cmd_parts += ["--batch-size", str(batch_size)]
+    if sleep_between:                 cmd_parts += ["--sleep-between-classes", str(sleep_between)]
+    if log_every:                     cmd_parts += ["--log-every", str(log_every)]
+
+else:
+    raise ValueError(f"MODE must be 'check' or 'search', got {MODE!r}")
+
+### SHARED OPTIONAL ARGS ###
+if check_db and check_db != "both": cmd_parts += ["--check", check_db]
+if check_db == "both":              cmd_parts += ["--check", "both"]
+if rosetta_txt_file:                cmd_parts += ["--rosetta-txt", rosetta_txt_file]
+if timeout is not None:             cmd_parts += ["--timeout", str(timeout)]
+if no_verify_ssl:                   cmd_parts.append("--no-verify-ssl")
+
+### PRINT THE COMMAND ###
+command_str = " ".join(cmd_parts)
+print(command_str)

@@ -1,0 +1,57 @@
+{
+  "name": "iterative_refine",
+  "description": "Iterative refinement with selection",
+  "version": "2.2",
+  "layer_cuts": [
+    6.0,
+    8.0,
+    12.0
+  ],
+  "steps": [
+    {
+      "type": "design_core",
+      "temperature": 0.2,
+      "num_designs": 1
+    },
+    {
+      "type": "torsional_relax",
+      "repeats": 1,
+      "stages": 2
+    },
+    {
+      "type": "design_core",
+      "temperature": 0.15,
+      "num_designs": 1
+    },
+    {
+      "type": "torsional_relax",
+      "repeats": 1,
+      "stages": 2
+    },
+    {
+      "type": "design_core",
+      "temperature": 0.1,
+      "num_designs": 10
+    },
+    {
+      "type": "torsional_relax",
+      "repeats": 2,
+      "stages": 3
+    },
+    {
+      "type": "design_core",
+      "temperature": 0.1,
+      "num_designs": 10
+    },
+    {
+      "type": "torsional_relax",
+      "repeats": 1,
+      "stages": 3
+    },
+    {
+      "type": "select_best",
+      "n": 5,
+      "metric": "score"
+    }
+  ]
+}

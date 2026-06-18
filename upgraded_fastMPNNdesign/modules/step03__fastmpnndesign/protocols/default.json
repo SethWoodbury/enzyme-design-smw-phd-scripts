@@ -1,0 +1,495 @@
+{
+  "name": "default_legacy_inspired",
+  "description": "Legacy-inspired protocol with early cart-min geometry cleanup, controlled branching, and repeated clustering",
+  "version": "3.1",
+  "layer_cuts": [
+    7.0,
+    12.0,
+    15.0
+  ],
+  "steps": [
+    {
+      "type": "scale",
+      "terms": {
+        "fa_rep": 0.15,
+        "global_coord_constraint": 0.0
+      },
+      "comment": "Start with soft repulsion; global constraints explicitly off"
+    },
+    {
+      "type": "mpnn_multi",
+      "comment": "Initial low-branching exploration across sc_context on/off and two temperatures",
+      "strategies": [
+        {
+          "type": "design_core_shell",
+          "temperature": 0.1,
+          "num_designs": 2,
+          "batch_size": 1,
+          "use_sc_context": true,
+          "pack_side_chains": true,
+          "sc_denoising_steps": 3,
+          "omit_aa": "",
+          "comment": "Low-T core+shell, sc_context on",
+          "repack_everything": false,
+          "enhance": "plddt_3_20240930-f9c9ea0f"
+        },
+        {
+          "type": "design_core_shell",
+          "temperature": 0.1,
+          "num_designs": 2,
+          "batch_size": 1,
+          "use_sc_context": false,
+          "pack_side_chains": true,
+          "sc_denoising_steps": 3,
+          "omit_aa": "",
+          "comment": "Low-T core+shell, sc_context off",
+          "repack_everything": false,
+          "enhance": "plddt_3_20240930-f9c9ea0f"
+        },
+        {
+          "type": "design_core_shell",
+          "temperature": 0.2,
+          "num_designs": 2,
+          "batch_size": 1,
+          "use_sc_context": true,
+          "pack_side_chains": true,
+          "sc_denoising_steps": 3,
+          "omit_aa": "",
+          "comment": "Mid-T core+shell, sc_context on",
+          "repack_everything": false,
+          "enhance": "plddt_3_20240930-f9c9ea0f"
+        },
+        {
+          "type": "design_core_shell",
+          "temperature": 0.2,
+          "num_designs": 2,
+          "batch_size": 1,
+          "use_sc_context": false,
+          "pack_side_chains": true,
+          "sc_denoising_steps": 3,
+          "omit_aa": "",
+          "comment": "Mid-T core+shell, sc_context off",
+          "repack_everything": false,
+          "enhance": "plddt_3_20240930-f9c9ea0f"
+        }
+      ]
+    },
+    {
+      "type": "repack",
+      "repack_scope": "core_shell_flex",
+      "scorefunction": "beta_jan25",
+      "comment": "Repack core+shell+flex before cartesian minimization",
+      "coord_cst_weight": 750.0,
+      "coord_cst_stdev": 0.01,
+      "global_coord_cst_weight": 0.0,
+      "global_coord_cst_stdev": 1.0,
+      "fa_rep_weight": null
+    },
+    {
+      "type": "minimize",
+      "tolerance": 0.001,
+      "cartesian": true,
+      "cart_bonded_weight": 3.5,
+      "scorefunction": "ref2015_cart",
+      "minimize_scope": "core_shell_flex",
+      "comment": "Cartesian min for early bond/angle cleanup (core+shell+flex)",
+      "coord_cst_weight": 750.0,
+      "coord_cst_stdev": 0.01,
+      "global_coord_cst_weight": 0.0,
+      "global_coord_cst_stdev": 1.0,
+      "fa_rep_weight": null
+    },
+    {
+      "type": "select_best",
+      "n": 4,
+      "metric": "geometry",
+      "comment": "Keep 4 best by bond-geometry metrics"
+    },
+    {
+      "type": "mpnn_multi",
+      "comment": "High-diversity exploration (T=0.4) with sc_context on/off",
+      "strategies": [
+        {
+          "type": "design_core_shell",
+          "temperature": 0.4,
+          "num_designs": 5,
+          "batch_size": 3,
+          "use_sc_context": true,
+          "pack_side_chains": true,
+          "sc_denoising_steps": 3,
+          "omit_aa": "CM",
+          "comment": "High-T core+shell, sc_context on",
+          "repack_everything": false,
+          "enhance": "plddt_3_20240930-f9c9ea0f"
+        },
+        {
+          "type": "design_core_shell",
+          "temperature": 0.4,
+          "num_designs": 5,
+          "batch_size": 3,
+          "use_sc_context": false,
+          "pack_side_chains": true,
+          "sc_denoising_steps": 3,
+          "omit_aa": "CM",
+          "comment": "High-T core+shell, sc_context off",
+          "repack_everything": false,
+          "enhance": "plddt_3_20240930-f9c9ea0f"
+        }
+      ]
+    },
+    {
+      "type": "cluster",
+      "method": "sequence",
+      "n_clusters": 20,
+      "comment": "Cluster by sequence to 20 clusters"
+    },
+    {
+      "type": "keep_cluster_best",
+      "n": 1,
+      "metric": "smart",
+      "comment": "Keep best per cluster (smart metric)"
+    },
+    {
+      "type": "repack",
+      "repack_scope": "core_shell",
+      "scorefunction": "beta_jan25",
+      "comment": "Repack core+shell before torsional minimize",
+      "coord_cst_weight": 750.0,
+      "coord_cst_stdev": 0.01,
+      "global_coord_cst_weight": 0.0,
+      "global_coord_cst_stdev": 1.0,
+      "fa_rep_weight": null
+    },
+    {
+      "type": "scale",
+      "terms": {
+        "fa_rep": 0.2,
+        "global_coord_constraint": 0.0
+      },
+      "comment": "Slightly increase fa_rep for refinement"
+    },
+    {
+      "type": "minimize",
+      "tolerance": 0.005,
+      "scorefunction": "beta_jan25",
+      "minimize_scope": "core_shell",
+      "comment": "Torsional min with beta_jan25",
+      "coord_cst_weight": 750.0,
+      "coord_cst_stdev": 0.01,
+      "global_coord_cst_weight": 0.0,
+      "global_coord_cst_stdev": 1.0,
+      "fa_rep_weight": null,
+      "cart_bonded_weight": 3.5
+    },
+    {
+      "type": "cluster",
+      "method": "sequence",
+      "n_clusters": 10,
+      "comment": "Cluster by sequence to 10 clusters"
+    },
+    {
+      "type": "keep_cluster_best",
+      "n": 1,
+      "metric": "smart",
+      "comment": "Keep best per cluster (smart metric)"
+    },
+    {
+      "type": "mpnn_multi",
+      "comment": "Moderate refinement (T=0.3) with sc_context on/off",
+      "strategies": [
+        {
+          "type": "design_core_shell",
+          "temperature": 0.3,
+          "num_designs": 2,
+          "batch_size": 1,
+          "use_sc_context": true,
+          "pack_side_chains": true,
+          "sc_denoising_steps": 3,
+          "omit_aa": "CM",
+          "comment": "Mid-T core+shell, sc_context on",
+          "repack_everything": false,
+          "enhance": "plddt_3_20240930-f9c9ea0f"
+        },
+        {
+          "type": "design_core_shell",
+          "temperature": 0.3,
+          "num_designs": 2,
+          "batch_size": 1,
+          "use_sc_context": false,
+          "pack_side_chains": true,
+          "sc_denoising_steps": 3,
+          "omit_aa": "CM",
+          "comment": "Mid-T core+shell, sc_context off",
+          "repack_everything": false,
+          "enhance": "plddt_3_20240930-f9c9ea0f"
+        }
+      ]
+    },
+    {
+      "type": "cluster",
+      "method": "sequence",
+      "n_clusters": 20,
+      "comment": "Cluster by sequence to 20 clusters"
+    },
+    {
+      "type": "keep_cluster_best",
+      "n": 1,
+      "metric": "smart",
+      "comment": "Keep best per cluster (smart metric)"
+    },
+    {
+      "type": "scale",
+      "terms": {
+        "fa_rep": 0.45,
+        "global_coord_constraint": 0.0
+      },
+      "comment": "Increase fa_rep for later-stage refinement"
+    },
+    {
+      "type": "minimize",
+      "tolerance": 0.005,
+      "scorefunction": "beta_jan25",
+      "minimize_scope": "core_shell",
+      "comment": "Torsional min to consolidate improvements",
+      "coord_cst_weight": 750.0,
+      "coord_cst_stdev": 0.01,
+      "global_coord_cst_weight": 0.0,
+      "global_coord_cst_stdev": 1.0,
+      "fa_rep_weight": null,
+      "cart_bonded_weight": 3.5
+    },
+    {
+      "type": "cluster",
+      "method": "sequence",
+      "n_clusters": 10,
+      "comment": "Cluster by sequence to 10 clusters"
+    },
+    {
+      "type": "keep_cluster_best",
+      "n": 1,
+      "metric": "smart",
+      "comment": "Keep best per cluster (smart metric)"
+    },
+    {
+      "type": "mpnn_multi",
+      "comment": "Lower-temp exploration with optional flex design",
+      "strategies": [
+        {
+          "type": "design_core_shell",
+          "temperature": 0.2,
+          "num_designs": 2,
+          "batch_size": 1,
+          "use_sc_context": true,
+          "pack_side_chains": true,
+          "sc_denoising_steps": 3,
+          "omit_aa": "CM",
+          "comment": "Low-T core+shell, sc_context on",
+          "repack_everything": false,
+          "enhance": "plddt_3_20240930-f9c9ea0f"
+        },
+        {
+          "type": "design_core_shell",
+          "temperature": 0.2,
+          "num_designs": 2,
+          "batch_size": 1,
+          "use_sc_context": false,
+          "pack_side_chains": true,
+          "sc_denoising_steps": 3,
+          "omit_aa": "CM",
+          "comment": "Low-T core+shell, sc_context off",
+          "repack_everything": false,
+          "enhance": "plddt_3_20240930-f9c9ea0f"
+        },
+        {
+          "type": "design_core_shell_flex",
+          "temperature": 0.2,
+          "num_designs": 2,
+          "batch_size": 1,
+          "use_sc_context": true,
+          "pack_side_chains": true,
+          "sc_denoising_steps": 3,
+          "omit_aa": "CM",
+          "comment": "Low-T core+shell+flex, sc_context on",
+          "repack_everything": false,
+          "enhance": "plddt_3_20240930-f9c9ea0f"
+        }
+      ]
+    },
+    {
+      "type": "cluster",
+      "method": "sequence",
+      "n_clusters": 20,
+      "comment": "Cluster by sequence to 20 clusters"
+    },
+    {
+      "type": "keep_cluster_best",
+      "n": 1,
+      "metric": "smart",
+      "comment": "Keep best per cluster (smart metric)"
+    },
+    {
+      "type": "scale",
+      "terms": {
+        "fa_rep": 0.75,
+        "global_coord_constraint": 0.0
+      },
+      "comment": "Near-default fa_rep before final refinement"
+    },
+    {
+      "type": "minimize",
+      "tolerance": 0.001,
+      "scorefunction": "beta_jan25",
+      "minimize_scope": "core_shell_flex",
+      "comment": "Torsional min with broader scope",
+      "coord_cst_weight": 750.0,
+      "coord_cst_stdev": 0.01,
+      "global_coord_cst_weight": 0.0,
+      "global_coord_cst_stdev": 1.0,
+      "fa_rep_weight": null,
+      "cart_bonded_weight": 3.0
+    },
+    {
+      "type": "cluster",
+      "method": "sequence",
+      "n_clusters": 10,
+      "comment": "Cluster by sequence to 10 clusters"
+    },
+    {
+      "type": "keep_cluster_best",
+      "n": 1,
+      "metric": "smart",
+      "comment": "Keep best per cluster (smart metric)"
+    },
+    {
+      "type": "mpnn_multi",
+      "comment": "Final low-T refinement sweep (sc_context on/off)",
+      "strategies": [
+        {
+          "type": "design_core_shell",
+          "temperature": 0.1,
+          "num_designs": 2,
+          "batch_size": 1,
+          "use_sc_context": true,
+          "pack_side_chains": true,
+          "sc_denoising_steps": 3,
+          "omit_aa": "CM",
+          "comment": "Low-T core+shell, sc_context on",
+          "repack_everything": false,
+          "enhance": "plddt_3_20240930-f9c9ea0f"
+        },
+        {
+          "type": "design_core_shell",
+          "temperature": 0.2,
+          "num_designs": 2,
+          "batch_size": 1,
+          "use_sc_context": true,
+          "pack_side_chains": true,
+          "sc_denoising_steps": 3,
+          "omit_aa": "CM",
+          "comment": "Mid-T core+shell, sc_context on",
+          "repack_everything": false,
+          "enhance": "plddt_3_20240930-f9c9ea0f"
+        },
+        {
+          "type": "design_core_shell",
+          "temperature": 0.1,
+          "num_designs": 2,
+          "batch_size": 1,
+          "use_sc_context": false,
+          "pack_side_chains": true,
+          "sc_denoising_steps": 3,
+          "omit_aa": "CM",
+          "comment": "Low-T core+shell, sc_context off",
+          "repack_everything": false,
+          "enhance": "plddt_3_20240930-f9c9ea0f"
+        }
+      ]
+    },
+    {
+      "type": "cluster",
+      "method": "sequence",
+      "n_clusters": 20,
+      "comment": "Cluster by sequence to 20 clusters"
+    },
+    {
+      "type": "keep_cluster_best",
+      "n": 1,
+      "metric": "smart",
+      "comment": "Keep best per cluster (smart metric)"
+    },
+    {
+      "type": "scale",
+      "terms": {
+        "fa_rep": "reset"
+      },
+      "comment": "Reset fa_rep to scorefunction default"
+    },
+    {
+      "type": "minimize",
+      "tolerance": 0.0001,
+      "scorefunction": "beta_jan25",
+      "minimize_scope": "core_shell",
+      "comment": "Final tight minimization",
+      "coord_cst_weight": 750.0,
+      "coord_cst_stdev": 0.01,
+      "global_coord_cst_weight": 0.0,
+      "global_coord_cst_stdev": 1.0,
+      "fa_rep_weight": null,
+      "cart_bonded_weight": 3.0
+    },
+    {
+      "type": "cluster",
+      "method": "sequence",
+      "n_clusters": 10,
+      "comment": "Cluster by sequence to 10 clusters"
+    },
+    {
+      "type": "keep_cluster_best",
+      "n": 1,
+      "metric": "smart",
+      "comment": "Keep best per cluster (smart metric)"
+    },
+    {
+      "type": "keep_interactions",
+      "target": "ligand",
+      "interaction_types": [
+        "hbond",
+        "metal"
+      ],
+      "probability": 0.5,
+      "mutator_atoms": "sidechain",
+      "comment": "Fix a subset of ligand-contacting residues"
+    },
+    {
+      "type": "keep_interactions",
+      "target": "catres",
+      "interaction_types": [
+        "hbond"
+      ],
+      "probability": 0.5,
+      "mutator_atoms": "sidechain",
+      "comment": "Fix a subset of catres H-bonding residues"
+    },
+    {
+      "type": "final_diversify",
+      "temperatures": [
+        0.1,
+        0.15,
+        0.2
+      ],
+      "target_count": 30,
+      "designs_per_temp": 1,
+      "max_iterations": 3,
+      "design_scope": "shell_flex",
+      "batch_size": 1,
+      "overshoot_threshold": 0.75,
+      "fallback_include_flex": true,
+      "use_sc_context": true,
+      "pack_side_chains": true,
+      "sc_denoising_steps": 3,
+      "omit_aa": "CM",
+      "enhance": "plddt_3_20240930-f9c9ea0f",
+      "comment": "Final diversification to reach target_count (CLI --num_final_designs overrides)"
+    }
+  ]
+}

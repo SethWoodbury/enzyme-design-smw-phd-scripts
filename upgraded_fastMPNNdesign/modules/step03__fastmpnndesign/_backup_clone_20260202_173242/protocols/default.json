@@ -1,0 +1,273 @@
+{
+  "$schema": "protocol_schema.json",
+  "name": "default_legacy_inspired",
+  "description": "Legacy-inspired protocol with early cart-min geometry cleanup, controlled branching, and repeated clustering",
+  "version": "2.2",
+  "layer_cuts": [
+    6.0,
+    8.0,
+    12.0
+  ],
+  "steps": [
+    {
+      "type": "scale",
+      "terms": {
+        "fa_rep": 0.15,
+        "global_coord_constraint": 0.0
+      },
+      "comment": "Start soft repulsion (explicit global constraint default = 0.0)"
+    },
+    {
+      "type": "design_core_shell",
+      "temperature": 0.1,
+      "num_designs": 2,
+      "batch_size": 1,
+      "use_sc_context": true,
+      "pack_side_chains": true,
+      "sc_denoising_steps": 3,
+      "omit_aa": "",
+      "comment": "Early low-branching design (2 structures)",
+      "repack_everything": false,
+      "enhance": "plddt_3_20240930-f9c9ea0f"
+    },
+    {
+      "type": "repack",
+      "repack_scope": "core_shell",
+      "scorefunction": "ref2015_cart",
+      "comment": "Repack before cart-min; catres always excluded",
+      "coord_cst_weight": 750.0,
+      "coord_cst_stdev": 0.01,
+      "global_coord_cst_weight": 0.0,
+      "global_coord_cst_stdev": 0.5,
+      "fa_rep_weight": null
+    },
+    {
+      "type": "minimize",
+      "tolerance": 0.01,
+      "cartesian": true,
+      "cart_bonded_weight": 3.0,
+      "scorefunction": "ref2015_cart",
+      "minimize_scope": "core_shell",
+      "comment": "Cartesian min (core+shell) to clean bond/angle issues",
+      "coord_cst_weight": 750.0,
+      "coord_cst_stdev": 0.01,
+      "global_coord_cst_weight": 0.0,
+      "global_coord_cst_stdev": 0.5,
+      "fa_rep_weight": null
+    },
+    {
+      "type": "select_best",
+      "n": 1,
+      "metric": "geometry",
+      "comment": "Keep best geometry"
+    },
+    {
+      "type": "design_core_shell",
+      "temperature": 0.4,
+      "num_designs": 10,
+      "batch_size": 1,
+      "use_sc_context": true,
+      "pack_side_chains": true,
+      "sc_denoising_steps": 3,
+      "omit_aa": "CM",
+      "comment": "High diversity exploration (10 structures)",
+      "repack_everything": false,
+      "enhance": "plddt_3_20240930-f9c9ea0f"
+    },
+    {
+      "type": "repack",
+      "repack_scope": "core_shell",
+      "scorefunction": "beta_jan25",
+      "coord_cst_weight": 750.0,
+      "coord_cst_stdev": 0.01,
+      "global_coord_cst_weight": 0.0,
+      "global_coord_cst_stdev": 0.5,
+      "fa_rep_weight": null
+    },
+    {
+      "type": "scale",
+      "terms": {
+        "fa_rep": 0.2,
+        "global_coord_constraint": 0.0
+      }
+    },
+    {
+      "type": "minimize",
+      "tolerance": 0.01,
+      "scorefunction": "beta_jan25",
+      "minimize_scope": "core_shell",
+      "comment": "Torsional min with beta_jan25",
+      "coord_cst_weight": 750.0,
+      "coord_cst_stdev": 0.01,
+      "global_coord_cst_weight": 0.0,
+      "global_coord_cst_stdev": 0.5,
+      "fa_rep_weight": null,
+      "cart_bonded_weight": 2.0
+    },
+    {
+      "type": "scale",
+      "terms": {
+        "fa_rep": 0.365,
+        "global_coord_constraint": 0.0
+      }
+    },
+    {
+      "type": "cluster",
+      "method": "sequence",
+      "n_clusters": 5
+    },
+    {
+      "type": "keep_cluster_best",
+      "n": 1,
+      "metric": "smart"
+    },
+    {
+      "type": "design_core_shell",
+      "temperature": 0.3,
+      "num_designs": 2,
+      "batch_size": 1,
+      "use_sc_context": true,
+      "pack_side_chains": true,
+      "sc_denoising_steps": 3,
+      "omit_aa": "CM",
+      "comment": "Moderate refinement (aim ~10 structures)",
+      "repack_everything": false,
+      "enhance": "plddt_3_20240930-f9c9ea0f"
+    },
+    {
+      "type": "scale",
+      "terms": {
+        "fa_rep": 0.48,
+        "global_coord_constraint": 0.0
+      }
+    },
+    {
+      "type": "minimize",
+      "tolerance": 0.01,
+      "scorefunction": "beta_jan25",
+      "minimize_scope": "core_shell",
+      "coord_cst_weight": 750.0,
+      "coord_cst_stdev": 0.01,
+      "global_coord_cst_weight": 0.0,
+      "global_coord_cst_stdev": 0.5,
+      "fa_rep_weight": null,
+      "cart_bonded_weight": 2.0
+    },
+    {
+      "type": "cluster",
+      "method": "sequence",
+      "n_clusters": 5
+    },
+    {
+      "type": "keep_cluster_best",
+      "n": 1,
+      "metric": "smart"
+    },
+    {
+      "type": "scale",
+      "terms": {
+        "fa_rep": 0.659,
+        "global_coord_constraint": 0.0
+      }
+    },
+    {
+      "type": "design_core_shell",
+      "temperature": 0.2,
+      "num_designs": 2,
+      "batch_size": 1,
+      "use_sc_context": true,
+      "pack_side_chains": true,
+      "sc_denoising_steps": 3,
+      "omit_aa": "CM",
+      "repack_everything": false,
+      "enhance": "plddt_3_20240930-f9c9ea0f"
+    },
+    {
+      "type": "scale",
+      "terms": {
+        "fa_rep": 0.75,
+        "global_coord_constraint": 0.0
+      }
+    },
+    {
+      "type": "minimize",
+      "tolerance": 0.01,
+      "scorefunction": "beta_jan25",
+      "minimize_scope": "core_shell",
+      "coord_cst_weight": 750.0,
+      "coord_cst_stdev": 0.01,
+      "global_coord_cst_weight": 0.0,
+      "global_coord_cst_stdev": 0.5,
+      "fa_rep_weight": null,
+      "cart_bonded_weight": 2.0
+    },
+    {
+      "type": "cluster",
+      "method": "sequence",
+      "n_clusters": 5
+    },
+    {
+      "type": "keep_cluster_best",
+      "n": 1,
+      "metric": "smart"
+    },
+    {
+      "type": "scale",
+      "terms": {
+        "fa_rep": 1.0,
+        "global_coord_constraint": 0.0
+      }
+    },
+    {
+      "type": "design_core_shell",
+      "temperature": 0.1,
+      "num_designs": 2,
+      "batch_size": 1,
+      "use_sc_context": true,
+      "pack_side_chains": true,
+      "sc_denoising_steps": 3,
+      "omit_aa": "CM",
+      "repack_everything": false,
+      "enhance": "plddt_3_20240930-f9c9ea0f"
+    },
+    {
+      "type": "minimize",
+      "tolerance": 1e-05,
+      "scorefunction": "beta_jan25",
+      "minimize_scope": "core_shell",
+      "coord_cst_weight": 750.0,
+      "coord_cst_stdev": 0.01,
+      "global_coord_cst_weight": 0.0,
+      "global_coord_cst_stdev": 0.5,
+      "fa_rep_weight": null,
+      "cart_bonded_weight": 2.0
+    },
+    {
+      "type": "cluster",
+      "method": "sequence",
+      "n_clusters": 10
+    },
+    {
+      "type": "keep_cluster_best",
+      "n": 1,
+      "metric": "smart"
+    },
+    {
+      "type": "final_diversify",
+      "temperatures": [0.1, 0.15, 0.2],
+      "target_count": 30,
+      "designs_per_temp": 1,
+      "max_iterations": 3,
+      "design_scope": "shell_only",
+      "batch_size": 1,
+      "overshoot_threshold": 0.75,
+      "fallback_include_flex": true,
+      "use_sc_context": true,
+      "pack_side_chains": true,
+      "sc_denoising_steps": 3,
+      "omit_aa": "CM",
+      "enhance": "plddt_3_20240930-f9c9ea0f",
+      "comment": "Multi-temp final diversification (CLI --num_final_designs overrides target_count)"
+    }
+  ]
+}

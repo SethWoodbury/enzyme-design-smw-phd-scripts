@@ -1,0 +1,47 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fastmpnndesign"
+version = "0.1.0"
+description = "Iterative protein active-site design: LigandMPNN → Constrained Rosetta Relax → Filter/Rank"
+readme = "design_goal.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+authors = [
+    {name = "Woodbuse"}
+]
+keywords = ["protein", "design", "MPNN", "Rosetta", "enzyme"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+]
+dependencies = [
+    "numpy>=1.20",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov",
+]
+
+[project.scripts]
+fastmpnndesign = "fastmpnndesign.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["fastmpnndesign*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+addopts = "-v"

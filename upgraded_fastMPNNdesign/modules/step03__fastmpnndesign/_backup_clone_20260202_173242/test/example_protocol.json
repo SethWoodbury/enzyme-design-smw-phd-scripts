@@ -1,0 +1,8 @@
+{
+  "steps": [
+    {"type": "mpnn", "temperature": 0.1, "num_designs": 1, "spheres": ["primary"]},
+    {"type": "cart_relax", "repeats": 2, "stages": 3},
+    {"type": "mpnn", "temperature": 0.1, "num_designs": 4},
+    {"type": "torsional_relax", "repeats": 1, "stages": 3}
+  ]
+}

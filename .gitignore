@@ -1,0 +1,56 @@
+# =============================================================================
+#  .gitignore for enzyme-design-smw-phd-scripts
+#  Keeps source + curated test fixtures; excludes generated/run artifacts.
+# =============================================================================
+
+# ---- Python / Jupyter caches -------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.ipynb_checkpoints/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+*.egg-info/
+
+# ---- Editor / OS cruft -------------------------------------------------------
+*.swp
+*.swo
+*~
+.DS_Store
+.idea/
+.vscode/
+
+# ---- Slurm / job logs --------------------------------------------------------
+*.out
+*.err
+*.stdout
+*.stderr
+slurm-*.out
+*.log
+
+# ---- Generated test-run outputs ----------------------------------------------
+# NOTE: curated INPUT fixtures are intentionally kept and must NOT be ignored:
+#   **/test/step01_outputs/   (read as test input, despite the name)
+#   **/test/params/           (XDW.params / XDW.mol2 / conformers)
+#   **/test/input_pdb.pdb, **/test/ref_pdb.pdb, **/test/testdata/<inputs>
+**/output_dir/
+**/mpnn_[0-9]*/
+**/testdata/output_default_protocol/
+**/testdata/output_new_scopes/
+**/_pipeline_dryrun_test/
+**/_pipeline_full_test*/
+**/.pipeline_work_*/
+**/pipeline_hyperparam_sweep/
+
+# ---- Misc tool artifacts -----------------------------------------------------
+maxit.log
+
+# ---- External / third-party (NOT vendored) -----------------------------------
+# fused_mpnn (Justas Dauparas, IPD): external dependency, not redistributed here.
+# On the IPD cluster it lives at:
+#   /net/software/lab/scripts/enzyme_design/fused_mpnn_api
+# Override with the FUSED_MPNN_DIR environment variable.
+fastmpnn_design/fused_mpnn_api

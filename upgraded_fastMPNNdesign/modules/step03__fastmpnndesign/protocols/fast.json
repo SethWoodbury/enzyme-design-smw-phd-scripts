@@ -1,0 +1,32 @@
+{
+  "name": "fast",
+  "description": "Quick prototyping protocol - minimal relaxation, fast iteration",
+  "version": "2.2",
+  "layer_cuts": [
+    6.0,
+    8.0,
+    12.0
+  ],
+  "steps": [
+    {
+      "type": "design_core",
+      "temperature": 0.1,
+      "num_designs": 2
+    },
+    {
+      "type": "cart_relax",
+      "repeats": 1,
+      "stages": 2
+    },
+    {
+      "type": "design_core",
+      "temperature": 0.1,
+      "num_designs": 4
+    },
+    {
+      "type": "torsional_relax",
+      "repeats": 1,
+      "stages": 3
+    }
+  ]
+}

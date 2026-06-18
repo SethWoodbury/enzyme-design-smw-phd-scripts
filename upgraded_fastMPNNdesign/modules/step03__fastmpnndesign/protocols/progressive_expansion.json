@@ -1,0 +1,66 @@
+{
+  "name": "progressive_expansion",
+  "description": "Start with tight core, progressively expand design scope",
+  "version": "2.2",
+  "layer_cuts": [4.0, 6.0, 10.0],
+  "steps": [
+    {
+      "type": "comment",
+      "text": "Phase 1: Tight core design (0-4A)"
+    },
+    {
+      "type": "design_core",
+      "temperature": 0.1,
+      "num_designs": 4
+    },
+    {
+      "type": "cart_relax",
+      "repeats": 2,
+      "stages": 3,
+      "until_converged": true
+    },
+    {
+      "type": "select_best",
+      "n": 1,
+      "metric": "geometry"
+    },
+    {
+      "type": "comment",
+      "text": "Phase 2: Expand to standard boundaries"
+    },
+    {
+      "type": "set_layer_cuts",
+      "core_cutoff": 6.0,
+      "shell_cutoff": 8.0,
+      "flex_cutoff": 12.0
+    },
+    {
+      "type": "design_core_shell",
+      "temperature": 0.15,
+      "num_designs": 8
+    },
+    {
+      "type": "repack",
+      "repack_scope": "core_shell_flex"
+    },
+    {
+      "type": "torsional_relax",
+      "repeats": 2,
+      "stages": 3
+    },
+    {
+      "type": "comment",
+      "text": "Phase 3: Final refinement"
+    },
+    {
+      "type": "design_core",
+      "temperature": 0.1,
+      "num_designs": 4
+    },
+    {
+      "type": "torsional_relax",
+      "repeats": 1,
+      "stages": 3
+    }
+  ]
+}

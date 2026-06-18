@@ -1,0 +1,102 @@
+#######################################################################
+### GENERATE COMMAND: ligands_to_params__UNIFIED.py                  ###
+###   separate / network-merge / conformer grouping + multi-PDB      ###
+#######################################################################
+
+### REQUIRED PARAMETERS ###
+# PRIMARY pdb (all ligands taken from here, as in MODERN).
+input_single_pdb  = "/home/woodbuse/projects/organophosphatase/pxn/design_campaign_i4__pte_hbond_260515/theozymes/kcx_set1__pte_hbond/cropped/pte_kcx_hbond_TS1_theo.pdb"
+output_params_dir = "/home/woodbuse/projects/organophosphatase/pxn/design_campaign_i4__pte_hbond_260515/theozymes/kcx_set1__pte_hbond/cropped/params"
+
+### GROUPING ###
+# Each entry: "CODE=RES[,RES...]:mode"   mode = network | conformer
+#   network   -> merge instances into ONE residue (pseudobonds drawn within)
+#   conformer -> instances become conformers of each other (no inter-bonds);
+#                collected from primary + extra_conformer_pdbs below
+#   wildcard  -> "CODE=*:network" reproduces legacy MODERN lump-all behavior
+# Leave groups = [] to keep every ligand instance SEPARATE (new default).
+groups = [
+    "PBJ=PBJ:conformer",
+]
+
+# Conformer topology handling:
+#   "reference" (default, RECOMMENDED) -> perceive bonds ONCE from
+#       conformer 1, reuse that topology for all conformers, vary only
+#       coordinates. Correct for "same molecule, different geometry"
+#       (e.g. PBJ from TS1 vs TS2), and what Rosetta expects.
+#   "strict" -> bond-fix every conformer independently; hard-fail if the
+#       perceived topologies diverge (use only if conformers should be
+#       chemically identical AND you want that enforced).
+conformer_topology = "reference"
+
+# Extra PDBs scanned ONLY for resnames in conformer-mode groups.
+extra_conformer_pdbs = [
+    "/home/woodbuse/projects/organophosphatase/pxn/design_campaign_i4__pte_hbond_260515/theozymes/kcx_set1__pte_hbond/cropped/pte_kcx_hbond_TS2_theo.pdb",
+]
+
+### LEGACY SINGLE-CODE (only if groups == []) ###
+# Mirrors MODERN's --desired_ligand_3letter_code -> internally CODE=*:network.
+desired_code = None        # e.g. "ZDW"; ignored when `groups` is non-empty
+
+### SELECTION / IGNORE ###
+ligand_filters  = ["PBJ"]  # --ligands_to_extract_via_3letter_code; [] = all HETATM
+ignore_codes    = []       # e.g. ["HOH"]  -> drop these resnames entirely
+ignore_residues = []       # e.g. ["B12", "Z999"]  (<chain><resSeq>[<iCode>])
+
+### OPTIONAL FLAGS ###
+preserve_pdb_order  = True   # PDB->MOL2 keep atom names/order (False => XYZ legacy)
+stop_after_xyz      = False  # stop after writing per-unit input file
+stop_after_mol2     = False  # stop after MOL2 (+bond-fix), do not run Rosetta
+skip_bond_fix       = False  # skip MOL2 connectivity fixing
+auto_codes          = False  # auto 3-char codes for ungrouped multi-instances
+allow_rosetta_clash = False  # downgrade Rosetta residue_types.txt collision to warning
+verbose             = True   # extra debug prints
+
+rosetta_residue_types = None # None => default fa_standard residue_types.txt
+
+### CONSTANTS ###
+script_path = f"{SPECIAL_SCRIPTS_DIR}theozyme_and_ligand_handling/ligands_to_params__UNIFIED.py"
+
+### GENERATE THE COMMAND ###
+cmd = (f"python {script_path} "
+       f"--input_single_pdb {input_single_pdb} "
+       f"--output_dir_for_params_stuff {output_params_dir}")
+
+if groups:
+    for g in groups:
+        cmd += f" --group \"{g}\""
+elif desired_code:
+    cmd += f" --desired_ligand_3letter_code {desired_code}"
+
+if extra_conformer_pdbs:
+    cmd += " --extra_conformer_pdbs " + " ".join(extra_conformer_pdbs)
+if conformer_topology:
+    cmd += f" --conformer_topology {conformer_topology}"
+if ligand_filters:
+    cmd += " --ligands_to_extract_via_3letter_code " + " ".join(ligand_filters)
+if ignore_codes:
+    cmd += " --ignore_codes " + " ".join(ignore_codes)
+if ignore_residues:
+    cmd += " --ignore_residues " + " ".join(ignore_residues)
+if preserve_pdb_order:
+    cmd += " --preserve_pdb_ligand_atom_order"
+if stop_after_xyz:
+    cmd += " --stop_after_XYZ_is_made"
+if stop_after_mol2:
+    cmd += " --stop_after_MOL2_is_made"
+if skip_bond_fix:
+    cmd += " --skip_bond_fix"
+if auto_codes:
+    cmd += " --auto_codes"
+if allow_rosetta_clash:
+    cmd += " --allow_rosetta_code_collision"
+if rosetta_residue_types:
+    cmd += f" --rosetta_residue_types {rosetta_residue_types}"
+if verbose:
+    cmd += " --verbose"
+
+### CREATE OUTPUT DIR ###
+os.makedirs(output_params_dir, exist_ok=True)
+
+### PRINT THE COMMAND ###
+print(cmd)

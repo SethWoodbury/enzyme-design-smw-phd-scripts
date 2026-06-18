@@ -1,0 +1,7 @@
+# Example protocol file in text format
+# Lines starting with # are comments
+
+mpnn:T0.1:N1:spheres=primary
+cart_relax:R2S3
+mpnn:T0.1:N4
+torsional_relax:R1S3

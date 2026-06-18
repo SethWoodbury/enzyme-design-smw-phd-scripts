@@ -1,0 +1,166 @@
+######################################
+### PREPARE PDB STRUCTURE INTO THEOZYME ###
+######################################
+# Script: prepare_PDB_structure_into_theozyme.py
+# Author: Seth M. Woodbury, David Baker Lab, UW (woodbuse@uw.edu)
+#
+# Preserve-by-default: leaving a toggle at its default value is safe
+# and changes nothing.  Only set flags when you need a specific behavior.
+#
+# Copy this cell into your Jupyter notebook and set the variables below.
+# Run it to print (and optionally write) the ready-to-execute command.
+
+import os
+import shlex
+
+num = 1  # optional run index (used to parametrize filenames when looping)
+
+### INPUTS ###
+input_pdb   = f"{theozymes_dir}set{num}_raw.pdb"            # path to input PDB
+output_pdb  = f"{theozymes_dir}set{num}_prepped.pdb"        # path for output PDB
+merge_ligands_as = None   # str: 3-letter code to merge ALL HETATM into one ligand
+                           # (also auto-enables --theozyme_layout); e.g. "SUB"
+
+### OPTIONAL REMARK 666 ORDERING ###
+remark_front              = []      # e.g. ["A55","A57"] — put these anchors FIRST  → --remark666_residue_front_order
+remark_back               = []      # e.g. ["A233"]       — put these anchors LAST   → --remark666_residue_back_order
+remark666_exclude_residues = []     # e.g. ["A131"]       — remove these anchors entirely  → --remark666_exclude_residues
+complete_remark666         = False  # True  → add 666 lines for uncovered protein residues  → --complete_remark666
+force_regenerate_remark666 = False  # True  → rebuild all 666 lines from scratch  → --force_regenerate_remark666
+clean_remarks              = False  # True  → strip all non-665/666 REMARK lines  → --clean_remarks
+
+### REMARK 666 TEMPLATE (for MATCH TEMPLATE header) ###
+remark666_template_ligand  = None   # str: ligand name for template line, e.g. "SUB"  → --remark666_template_ligand
+remark666_template_chain   = None   # str: chain for template line, e.g. "X"  → --remark666_template_chain
+remark666_template_resi    = None   # str/int: residue number for template line, e.g. "0"  → --remark666_template_resi
+
+### FILTERING (residue/ligand keep-or-throw) ###
+# Selector formats: "A55" (chain+resseq) or "Z:SUB:999" (chain:resname:resseq)
+residues_to_keep       = None   # list[str] or None — keep ONLY these residues (mutually exclusive with throw_away)
+residues_to_throw_away = None   # list[str] or None — remove these residues (mutually exclusive with keep)
+ligands_to_keep        = None   # list[str] or None — keep ONLY these HETATM ligands
+ligands_to_throw_away  = None   # list[str] or None — remove these HETATM ligands
+preserve_waters        = False  # True → treat HOH specially: always keep (bypass ligand
+                                #        filters) AND never merge. Default: HOH is a normal
+                                #        HETATM ligand, subject to keep/throw + merge.  → --preserve_waters
+
+### ncAA HANDLING ###
+frag_ncAA               = None   # list[str] or None: None → OFF; [] → all ncAAs; ["A169"] → specific
+                                  # e.g. fragment KCX at A169 → --frag_ncAA_into_cAA_plus_lig A169
+protect_ncAA_from_ligandization = False  # True → temporarily HETATM→ATOM for ncAA, revert after; mutually exclusive with frag/leave
+leave_ncAA_as_ATOM              = False  # True → permanently HETATM→ATOM for ncAA (never revert); mutually exclusive with protect/frag
+add_CA_to_labeled_frag          = False  # True → reconstruct CA from CB–H for fragmented ncAAs missing a CA
+protect_sidechain_polarH        = None   # None → OFF; [] → all protein residues; ["A32","A55"] → specific
+disable_intelligent_hstrip      = False  # True → turn OFF automatic H-stripping logic during ncAA fragmentation
+
+### MERGE LIGANDS ###
+# merge_ligands_as set above; extra options for merged ligand placement:
+merged_ligand_chain  = None   # str: chain for merged ligand output, e.g. "Z"  → --merged_ligand_chain
+merged_ligand_resseq = None   # str/int: residue number for merged ligand, e.g. "999"  → --merged_ligand_resseq
+merge_only           = None   # list[str] or None: limit merge to these HETATM selectors, e.g. ["Z:LIG:901","Z:CO:902"]  → --merge_only
+
+### LEGACY OPT-IN CLEANING (all OFF by default = preserve-by-default) ###
+strip_insertion_codes   = False  # True → remove residue insertion-code suffixes (e.g. "132N" → 132)
+strip_protein_hydrogens = False  # True → remove all ATOM hydrogen lines
+blank_segid             = False  # True → zero out the segID field (cols 73-76)
+strip_partial_charges   = False  # True → zero the B-factor / partial-charge column (cols 61-66)
+strip_formal_charges    = False  # True → clear the formal-charge column (cols 79-80)
+
+### THEOZYME LAYOUT ###
+theozyme_layout = False  # True → reorder output: REMARKs / REMARK666 / ATOM / TER / HETATM / TER / CONECT / MASTER / END
+                          # Note: setting merge_ligands_as auto-enables this flag
+
+### RENUMBER / CHECKS ###
+renumber_atoms        = False  # True → renumber all ATOM/HETATM serials from 1, grouped by residue
+no_ligand_code_checks = False  # True → skip CCD and Rosetta ligand-code validation (useful offline)
+rosetta_residue_types = None   # str: path to Rosetta residue_types.txt; None = use built-in default  → --rosetta_residue_types
+ccd_timeout           = None   # float: seconds for CCD HTTP lookup, e.g. 4.0; None = use default  → --ccd_timeout
+verbose               = False  # True → emit extra debug/info messages during run  → --verbose
+
+### CONSTANTS ###
+main_script = ("/home/woodbuse/special_scripts/theozyme_and_ligand_handling/"
+               "prepare_PDB_structure_into_theozyme.py")
+write_command_txt = None  # e.g. "/tmp/theozyme_prep_cmd.txt" — writes command for easy paste; None to skip
+
+### BUILD COMMAND ###
+# Sanity checks on mutually-exclusive options
+if residues_to_keep and residues_to_throw_away:
+    raise ValueError("residues_to_keep and residues_to_throw_away are mutually exclusive.")
+if ligands_to_keep and ligands_to_throw_away:
+    raise ValueError("ligands_to_keep and ligands_to_throw_away are mutually exclusive.")
+if protect_ncAA_from_ligandization and leave_ncAA_as_ATOM:
+    raise ValueError("protect_ncAA_from_ligandization and leave_ncAA_as_ATOM are mutually exclusive.")
+if frag_ncAA is not None and (protect_ncAA_from_ligandization or leave_ncAA_as_ATOM):
+    raise ValueError("frag_ncAA cannot be combined with protect_ncAA_from_ligandization or leave_ncAA_as_ATOM.")
+
+cmd = ["python", main_script,
+       "--input_pdb", input_pdb,
+       "--output_pdb_path", output_pdb]
+
+# OPTIONAL REMARK 666 ORDERING
+if remark666_exclude_residues:  cmd += ["--remark666_exclude_residues"] + remark666_exclude_residues  # remove anchors
+if remark_front:                cmd += ["--remark666_residue_front_order"] + remark_front              # front order
+if remark_back:                 cmd += ["--remark666_residue_back_order"] + remark_back                # back order
+if complete_remark666:          cmd += ["--complete_remark666"]                                        # auto-fill missing anchors
+if force_regenerate_remark666:  cmd += ["--force_regenerate_remark666"]                               # full rebuild
+if clean_remarks:               cmd += ["--clean_remarks"]                                             # strip non-665/666 REMARKs
+
+# REMARK 666 TEMPLATE
+if remark666_template_ligand:           cmd += ["--remark666_template_ligand", remark666_template_ligand]    # template ligand name
+if remark666_template_chain:            cmd += ["--remark666_template_chain", remark666_template_chain]      # template chain
+if remark666_template_resi is not None: cmd += ["--remark666_template_resi", str(remark666_template_resi)]   # template resi number
+
+# FILTERING
+if residues_to_keep:        cmd += ["--residues_to_keep"] + residues_to_keep                    # keep only these residues
+if residues_to_throw_away:  cmd += ["--residues_to_throw_away"] + residues_to_throw_away        # remove these residues
+if ligands_to_keep:         cmd += ["--ligands_to_keep"] + ligands_to_keep                      # keep only these ligands
+if ligands_to_throw_away:   cmd += ["--ligands_to_throw_away"] + ligands_to_throw_away          # remove these ligands
+
+# ncAA HANDLING
+if frag_ncAA is not None:                                                                       # None = OFF
+    cmd += ["--frag_ncAA_into_cAA_plus_lig"]
+    if frag_ncAA:  cmd += frag_ncAA                                                             # [] = all ncAAs; list = specific
+if protect_ncAA_from_ligandization:  cmd += ["--protect_ncAA_from_ligandization"]              # temp protect ncAA
+if leave_ncAA_as_ATOM:               cmd += ["--leave_ncAA_as_ATOM"]                           # permanent protect ncAA
+if add_CA_to_labeled_frag:           cmd += ["--add_CA_to_labeled_frag"]                       # reconstruct CA
+if protect_sidechain_polarH is not None:                                                        # None = OFF
+    cmd += ["--protect_sidechain_polarH"]
+    if protect_sidechain_polarH:  cmd += protect_sidechain_polarH                              # [] = all; list = specific
+if disable_intelligent_hstrip:  cmd += ["--disable_intelligent_hstrip"]                        # disable H-strip logic
+
+# MERGE LIGANDS (also enables theozyme_layout)
+if merge_ligands_as:              cmd += ["--merge_ligands_as", merge_ligands_as]              # merge HETATM into one ligand
+if merged_ligand_chain:           cmd += ["--merged_ligand_chain", merged_ligand_chain]        # merged ligand chain
+if merged_ligand_resseq is not None: cmd += ["--merged_ligand_resseq", str(merged_ligand_resseq)]  # merged ligand resseq
+if merge_only:                    cmd += ["--merge_only"] + merge_only                         # limit merge to these codes
+
+# LEGACY OPT-IN CLEANING
+if strip_insertion_codes:    cmd += ["--strip_insertion_codes"]                                # remove insertion codes
+if strip_protein_hydrogens:  cmd += ["--strip_protein_hydrogens"]                              # remove protein H
+if blank_segid:              cmd += ["--blank_segid"]                                          # zero segID field
+if strip_partial_charges:    cmd += ["--strip_partial_charges"]                                # zero B-factor/partial charge
+if strip_formal_charges:     cmd += ["--strip_formal_charges"]                                 # clear formal charge col
+
+# THEOZYME LAYOUT
+if theozyme_layout:  cmd += ["--theozyme_layout"]                                              # canonical theozyme record order
+
+# RENUMBER / CHECKS
+if renumber_atoms:          cmd += ["--renumber_atoms"]                                        # renumber atom serials from 1
+if no_ligand_code_checks:   cmd += ["--no_ligand_code_checks"]                                # skip CCD/Rosetta checks
+if preserve_waters:         cmd += ["--preserve_waters"]                                       # HOH special handling (keep + no-merge)
+if rosetta_residue_types:   cmd += ["--rosetta_residue_types", rosetta_residue_types]         # custom Rosetta residue types path
+if ccd_timeout is not None: cmd += ["--ccd_timeout", str(ccd_timeout)]                        # CCD HTTP timeout (seconds)
+if verbose:                 cmd += ["--verbose"]                                               # extra debug output
+
+### CREATE OUTPUT DIR & PRINT COMMAND ###
+if output_pdb:
+    os.makedirs(os.path.dirname(output_pdb) or ".", exist_ok=True)
+
+command_str = " ".join(shlex.quote(c) for c in cmd)
+print(command_str)
+
+if write_command_txt:
+    os.makedirs(os.path.dirname(write_command_txt) or ".", exist_ok=True)
+    with open(write_command_txt, "w") as _fh:
+        _fh.write(command_str + "\n")
+    print(f"[wrote command to {write_command_txt}]")

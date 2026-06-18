@@ -1,0 +1,18 @@
+{
+  "name": "geometry_only",
+  "description": "Geometry-only cartesian relaxation (no design)",
+  "version": "2.2",
+  "layer_cuts": [
+    6.0,
+    8.0,
+    12.0
+  ],
+  "steps": [
+    {
+      "type": "cart_relax",
+      "repeats": 3,
+      "stages": 5,
+      "until_converged": true
+    }
+  ]
+}

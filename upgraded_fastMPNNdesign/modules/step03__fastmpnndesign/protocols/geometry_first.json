@@ -1,0 +1,33 @@
+{
+  "name": "geometry_first",
+  "description": "Cart relax first, then design",
+  "version": "2.2",
+  "layer_cuts": [
+    6.0,
+    8.0,
+    12.0
+  ],
+  "steps": [
+    {
+      "type": "cart_relax",
+      "repeats": 3,
+      "stages": 3,
+      "until_converged": true
+    },
+    {
+      "type": "select_best",
+      "n": 1,
+      "metric": "geometry"
+    },
+    {
+      "type": "design_core",
+      "temperature": 0.1,
+      "num_designs": 20
+    },
+    {
+      "type": "torsional_relax",
+      "repeats": 2,
+      "stages": 3
+    }
+  ]
+}

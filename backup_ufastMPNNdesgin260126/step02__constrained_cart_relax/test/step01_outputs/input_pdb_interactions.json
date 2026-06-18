@@ -1,0 +1,635 @@
+{
+  "input_pdb": "/home/woodbuse/special_scripts/upgraded_fastMPNNdesign/modules/step01__catres_alignment/test/input_pdb.pdb",
+  "ref_pdb": "/home/woodbuse/special_scripts/upgraded_fastMPNNdesign/modules/step01__catres_alignment/test/ref_pdb.pdb",
+  "ligand": {
+    "chain": "B",
+    "resname": "XDW",
+    "resno": 257
+  },
+  "alignment_rmsd": 0.0,
+  "catres_subset_blocks": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    13,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "conserved_motif_blocks": [
+    12,
+    14
+  ],
+  "residue_analysis": {
+    "1": {
+      "chain": "A",
+      "resno": 13,
+      "resname": "HIS",
+      "interactions": [
+        {
+          "type": "metal_coord",
+          "catres_atom": "NE2",
+          "target_atom": "ZN1",
+          "distance": 2.04,
+          "is_backbone": false,
+          "target_type": "ligand"
+        },
+        {
+          "type": "pi_lig_interaction",
+          "target_type": "ligand",
+          "min_distance": 4.0,
+          "is_backbone": false
+        },
+        {
+          "type": "pi_pi_Tshape",
+          "target_type": "catres_2",
+          "centroid_distance": 5.28,
+          "is_backbone": false
+        },
+        {
+          "type": "backbone_hbond_bb_acceptor",
+          "catres_atom": "O",
+          "target_atom": "H",
+          "distance": 2.22,
+          "is_backbone": true,
+          "target_type": "catres_5"
+        }
+      ],
+      "backbone_important": false,
+      "sidechain_important": true,
+      "importance": "sidechain"
+    },
+    "2": {
+      "chain": "A",
+      "resno": 15,
+      "resname": "HIS",
+      "interactions": [
+        {
+          "type": "metal_coord",
+          "catres_atom": "NE2",
+          "target_atom": "ZN1",
+          "distance": 2.02,
+          "is_backbone": false,
+          "target_type": "ligand"
+        },
+        {
+          "type": "pi_lig_interaction",
+          "target_type": "ligand",
+          "min_distance": 3.77,
+          "is_backbone": false
+        },
+        {
+          "type": "pi_pi_Tshape",
+          "target_type": "catres_1",
+          "centroid_distance": 5.28,
+          "is_backbone": false
+        }
+      ],
+      "backbone_important": false,
+      "sidechain_important": true,
+      "importance": "sidechain"
+    },
+    "3": {
+      "chain": "A",
+      "resno": 176,
+      "resname": "HIS",
+      "interactions": [
+        {
+          "type": "metal_coord",
+          "catres_atom": "ND1",
+          "target_atom": "ZN2",
+          "distance": 2.06,
+          "is_backbone": false,
+          "target_type": "ligand"
+        },
+        {
+          "type": "pi_pi_Tshape",
+          "target_type": "catres_4",
+          "centroid_distance": 4.5,
+          "is_backbone": false
+        },
+        {
+          "type": "hbond_sc_acceptor",
+          "catres_atom": "ND1",
+          "target_atom": "HE1",
+          "distance": 3.37,
+          "is_backbone": false,
+          "target_type": "catres_7"
+        },
+        {
+          "type": "pi_pi_Tshape",
+          "target_type": "catres_7",
+          "centroid_distance": 5.61,
+          "is_backbone": false
+        },
+        {
+          "type": "pi_pi_Tshape",
+          "target_type": "catres_10",
+          "centroid_distance": 5.15,
+          "is_backbone": false
+        }
+      ],
+      "backbone_important": false,
+      "sidechain_important": true,
+      "importance": "sidechain"
+    },
+    "4": {
+      "chain": "A",
+      "resno": 203,
+      "resname": "HIS",
+      "interactions": [
+        {
+          "type": "metal_coord",
+          "catres_atom": "NE2",
+          "target_atom": "ZN2",
+          "distance": 2.03,
+          "is_backbone": false,
+          "target_type": "ligand"
+        },
+        {
+          "type": "pi_pi_Tshape",
+          "target_type": "catres_3",
+          "centroid_distance": 4.5,
+          "is_backbone": false
+        },
+        {
+          "type": "pi_pi_stacking_displaced",
+          "target_type": "catres_8",
+          "centroid_distance": 4.08,
+          "is_backbone": false
+        },
+        {
+          "type": "backbone_hbond_bb_acceptor",
+          "catres_atom": "O",
+          "target_atom": "H",
+          "distance": 2.1,
+          "is_backbone": true,
+          "target_type": "catres_9"
+        },
+        {
+          "type": "hbond_bb_donor",
+          "catres_atom": "H",
+          "target_atom": "OD1",
+          "distance": 2.0,
+          "is_backbone": true,
+          "target_type": "catres_13"
+        },
+        {
+          "type": "hbond_sc_donor",
+          "catres_atom": "HD1",
+          "target_atom": "OD2",
+          "distance": 1.8,
+          "is_backbone": false,
+          "target_type": "catres_13"
+        }
+      ],
+      "backbone_important": true,
+      "sidechain_important": true,
+      "importance": "both"
+    },
+    "5": {
+      "chain": "A",
+      "resno": 53,
+      "resname": "ASP",
+      "interactions": [
+        {
+          "type": "acid_base_mod",
+          "catres_atom": "OD1",
+          "target_atom": "H9",
+          "distance": 1.32,
+          "is_backbone": false,
+          "target_type": "ligand"
+        },
+        {
+          "type": "metal_coord",
+          "catres_atom": "OD2",
+          "target_atom": "ZN1",
+          "distance": 2.13,
+          "is_backbone": false,
+          "target_type": "ligand"
+        },
+        {
+          "type": "backbone_hbond_bb_donor",
+          "catres_atom": "H",
+          "target_atom": "O",
+          "distance": 2.22,
+          "is_backbone": true,
+          "target_type": "catres_1"
+        },
+        {
+          "type": "hbond_sc_acceptor",
+          "catres_atom": "OD1",
+          "target_atom": "HE2",
+          "distance": 1.85,
+          "is_backbone": false,
+          "target_type": "catres_8"
+        }
+      ],
+      "backbone_important": false,
+      "sidechain_important": true,
+      "importance": "sidechain"
+    },
+    "6": {
+      "chain": "A",
+      "resno": 174,
+      "resname": "LYS",
+      "interactions": [
+        {
+          "type": "post_translational_mod",
+          "catres_atom": "NZ",
+          "target_atom": "C1",
+          "distance": 1.35,
+          "is_backbone": false,
+          "target_type": "ligand"
+        },
+        {
+          "type": "charged",
+          "target_type": "ligand",
+          "min_distance": 2.23,
+          "is_backbone": false
+        },
+        {
+          "type": "charged",
+          "target_type": "catres_1",
+          "min_distance": 4.0,
+          "is_backbone": false
+        }
+      ],
+      "backbone_important": false,
+      "sidechain_important": true,
+      "importance": "sidechain"
+    },
+    "7": {
+      "chain": "A",
+      "resno": 149,
+      "resname": "TRP",
+      "interactions": [
+        {
+          "type": "hbond_sc_donor",
+          "catres_atom": "HE1",
+          "target_atom": "O5",
+          "distance": 2.16,
+          "is_backbone": false,
+          "target_type": "ligand"
+        },
+        {
+          "type": "hbond_sc_donor",
+          "catres_atom": "HE1",
+          "target_atom": "ND1",
+          "distance": 3.37,
+          "is_backbone": false,
+          "target_type": "catres_3"
+        },
+        {
+          "type": "pi_pi_Tshape",
+          "target_type": "catres_3",
+          "centroid_distance": 5.61,
+          "is_backbone": false
+        },
+        {
+          "type": "pi_pi_stacking",
+          "target_type": "catres_10",
+          "centroid_distance": 3.91,
+          "is_backbone": false
+        }
+      ],
+      "backbone_important": false,
+      "sidechain_important": true,
+      "importance": "sidechain"
+    },
+    "8": {
+      "chain": "A",
+      "resno": 226,
+      "resname": "HIS",
+      "interactions": [
+        {
+          "type": "charged",
+          "target_type": "ligand",
+          "min_distance": 4.29,
+          "is_backbone": false
+        },
+        {
+          "type": "hbond_sc_acceptor",
+          "catres_atom": "NE2",
+          "target_atom": "H9",
+          "distance": 3.49,
+          "is_backbone": false,
+          "target_type": "ligand"
+        },
+        {
+          "type": "hbond_sc_donor",
+          "catres_atom": "HE2",
+          "target_atom": "O3",
+          "distance": 3.42,
+          "is_backbone": false,
+          "target_type": "ligand"
+        },
+        {
+          "type": "charged",
+          "target_type": "catres_4",
+          "min_distance": 3.29,
+          "is_backbone": false
+        },
+        {
+          "type": "pi_pi_stacking_displaced",
+          "target_type": "catres_4",
+          "centroid_distance": 4.08,
+          "is_backbone": false
+        },
+        {
+          "type": "charged",
+          "target_type": "catres_5",
+          "min_distance": 2.69,
+          "is_backbone": false
+        },
+        {
+          "type": "hbond_sc_donor",
+          "catres_atom": "HE2",
+          "target_atom": "OD1",
+          "distance": 1.85,
+          "is_backbone": false,
+          "target_type": "catres_5"
+        },
+        {
+          "type": "charged",
+          "target_type": "catres_9",
+          "min_distance": 2.6,
+          "is_backbone": false
+        },
+        {
+          "type": "backbone_hbond_bb_acceptor",
+          "catres_atom": "O",
+          "target_atom": "H",
+          "distance": 2.14,
+          "is_backbone": true,
+          "target_type": "catres_11"
+        },
+        {
+          "type": "charged",
+          "target_type": "catres_11",
+          "min_distance": 3.81,
+          "is_backbone": false
+        },
+        {
+          "type": "pi_pi_stacking",
+          "target_type": "catres_11",
+          "centroid_distance": 4.06,
+          "is_backbone": false
+        },
+        {
+          "type": "charged",
+          "target_type": "catres_13",
+          "min_distance": 4.3,
+          "is_backbone": false
+        }
+      ],
+      "backbone_important": false,
+      "sidechain_important": true,
+      "importance": "sidechain"
+    },
+    "9": {
+      "chain": "A",
+      "resno": 206,
+      "resname": "ASP",
+      "interactions": [
+        {
+          "type": "charged",
+          "target_type": "catres_4",
+          "min_distance": 4.45,
+          "is_backbone": false
+        },
+        {
+          "type": "backbone_hbond_bb_donor",
+          "catres_atom": "H",
+          "target_atom": "O",
+          "distance": 2.1,
+          "is_backbone": true,
+          "target_type": "catres_4"
+        },
+        {
+          "type": "charged",
+          "target_type": "catres_8",
+          "min_distance": 2.6,
+          "is_backbone": false
+        }
+      ],
+      "backbone_important": false,
+      "sidechain_important": true,
+      "importance": "sidechain"
+    },
+    "10": {
+      "chain": "A",
+      "resno": 150,
+      "resname": "PHE",
+      "interactions": [
+        {
+          "type": "pi_pi_Tshape",
+          "target_type": "catres_3",
+          "centroid_distance": 5.15,
+          "is_backbone": false
+        },
+        {
+          "type": "pi_pi_stacking",
+          "target_type": "catres_7",
+          "centroid_distance": 3.91,
+          "is_backbone": false
+        }
+      ],
+      "backbone_important": false,
+      "sidechain_important": true,
+      "importance": "sidechain"
+    },
+    "11": {
+      "chain": "A",
+      "resno": 229,
+      "resname": "HIS",
+      "interactions": [
+        {
+          "type": "charged",
+          "target_type": "catres_5",
+          "min_distance": 3.29,
+          "is_backbone": false
+        },
+        {
+          "type": "charged",
+          "target_type": "catres_8",
+          "min_distance": 3.81,
+          "is_backbone": false
+        },
+        {
+          "type": "backbone_hbond_bb_donor",
+          "catres_atom": "H",
+          "target_atom": "O",
+          "distance": 2.14,
+          "is_backbone": true,
+          "target_type": "catres_8"
+        },
+        {
+          "type": "pi_pi_stacking",
+          "target_type": "catres_8",
+          "centroid_distance": 4.06,
+          "is_backbone": false
+        }
+      ],
+      "backbone_important": false,
+      "sidechain_important": true,
+      "importance": "sidechain"
+    },
+    "13": {
+      "chain": "A",
+      "resno": 225,
+      "resname": "ASP",
+      "interactions": [
+        {
+          "type": "charged",
+          "target_type": "catres_1",
+          "min_distance": 3.64,
+          "is_backbone": false
+        },
+        {
+          "type": "charged",
+          "target_type": "catres_4",
+          "min_distance": 2.8,
+          "is_backbone": false
+        },
+        {
+          "type": "hbond_sc_acceptor",
+          "catres_atom": "OD1",
+          "target_atom": "H",
+          "distance": 2.0,
+          "is_backbone": false,
+          "target_type": "catres_4"
+        },
+        {
+          "type": "hbond_sc_acceptor",
+          "catres_atom": "OD2",
+          "target_atom": "HD1",
+          "distance": 1.8,
+          "is_backbone": false,
+          "target_type": "catres_4"
+        },
+        {
+          "type": "charged",
+          "target_type": "catres_8",
+          "min_distance": 3.25,
+          "is_backbone": false
+        }
+      ],
+      "backbone_important": false,
+      "sidechain_important": true,
+      "importance": "sidechain"
+    },
+    "15": {
+      "chain": "A",
+      "resno": 55,
+      "resname": "LEU",
+      "interactions": [
+        {
+          "type": "hydrophobic",
+          "target_type": "ligand",
+          "min_distance": 3.96,
+          "is_backbone": false
+        },
+        {
+          "type": "hydrophobic",
+          "target_type": "catres_2",
+          "min_distance": 4.01,
+          "is_backbone": false
+        },
+        {
+          "type": "hydrophobic",
+          "target_type": "catres_17",
+          "min_distance": 3.97,
+          "is_backbone": false
+        }
+      ],
+      "backbone_important": false,
+      "sidechain_important": true,
+      "importance": "sidechain"
+    },
+    "16": {
+      "chain": "A",
+      "resno": 116,
+      "resname": "ILE",
+      "interactions": [
+        {
+          "type": "hydrophobic",
+          "target_type": "ligand",
+          "min_distance": 4.03,
+          "is_backbone": false
+        },
+        {
+          "type": "hydrophobic",
+          "target_type": "catres_2",
+          "min_distance": 4.15,
+          "is_backbone": false
+        },
+        {
+          "type": "hydrophobic",
+          "target_type": "catres_7",
+          "min_distance": 3.59,
+          "is_backbone": false
+        }
+      ],
+      "backbone_important": false,
+      "sidechain_important": true,
+      "importance": "sidechain"
+    },
+    "17": {
+      "chain": "A",
+      "resno": 19,
+      "resname": "PHE",
+      "interactions": [],
+      "backbone_important": false,
+      "sidechain_important": true,
+      "importance": "sidechain"
+    },
+    "18": {
+      "chain": "A",
+      "resno": 30,
+      "resname": "LEU",
+      "interactions": [
+        {
+          "type": "hydrophobic",
+          "target_type": "ligand",
+          "min_distance": 3.71,
+          "is_backbone": false
+        },
+        {
+          "type": "hydrophobic",
+          "target_type": "catres_17",
+          "min_distance": 3.78,
+          "is_backbone": false
+        },
+        {
+          "type": "hydrophobic",
+          "target_type": "catres_19",
+          "min_distance": 3.87,
+          "is_backbone": false
+        }
+      ],
+      "backbone_important": false,
+      "sidechain_important": true,
+      "importance": "sidechain"
+    },
+    "19": {
+      "chain": "A",
+      "resno": 21,
+      "resname": "TYR",
+      "interactions": [],
+      "backbone_important": false,
+      "sidechain_important": true,
+      "importance": "sidechain"
+    }
+  }
+}
