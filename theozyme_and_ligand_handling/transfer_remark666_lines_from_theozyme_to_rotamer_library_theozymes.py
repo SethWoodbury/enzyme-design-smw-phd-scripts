@@ -11,7 +11,7 @@ Input Arguments:
 Output: Rotamer PDB files with inserted REMARK 666 lines saved in their original location.
 
 EXAMPLE COMMAND:
-singularity exec /software/containers/crispy.sif python /home/woodbuse/special_scripts/theozyme_and_ligand_handling/transfer_remark666_lines_from_theozyme_to_rotamer_library_theozymes.py --theozyme_pdb_with_remark666_lines /home/woodbuse/for/don_hilvert/zinc_amidase_proj/theozymes/fluorogenic_amide_SM/cpa/theozymes_r_s/test/RFA_0001_theozyme.pdb --pdbs_without_remark666_lines "/home/woodbuse/for/don_hilvert/zinc_amidase_proj/theozymes/fluorogenic_amide_SM/cpa/theozymes_r_s/test/*RFA*.pdb"
+singularity exec /net/software/containers/crispy.sif python /home/woodbuse/special_scripts/theozyme_and_ligand_handling/transfer_remark666_lines_from_theozyme_to_rotamer_library_theozymes.py --theozyme_pdb_with_remark666_lines /home/woodbuse/for/don_hilvert/zinc_amidase_proj/theozymes/fluorogenic_amide_SM/cpa/theozymes_r_s/test/RFA_0001_theozyme.pdb --pdbs_without_remark666_lines "/home/woodbuse/for/don_hilvert/zinc_amidase_proj/theozymes/fluorogenic_amide_SM/cpa/theozymes_r_s/test/*RFA*.pdb"
 """
 
 import glob

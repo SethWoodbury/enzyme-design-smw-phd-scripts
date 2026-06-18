@@ -4,6 +4,14 @@ import argparse
 import os
 from math import sqrt
 
+# --- locate repo root + shared external paths ---
+import sys as _sys
+from pathlib import Path as _Path
+for _anc in _Path(__file__).resolve().parents:
+    if (_anc / "repo_paths.py").is_file():
+        _sys.path.insert(0, str(_anc)); break
+import repo_paths
+
 def parse_mol2(mol2_file):
     """Parse .mol2 file to get atoms and bonds."""
     atoms = {}
@@ -52,7 +60,7 @@ def find_nearest_heteroatom(target_atom, atoms):
     return nearest_atom_id
 
 def main(input_pdb, ligand_code):
-    obabel_path = "/home/woodbuse/conda_envs/openbabel_env/bin/obabel"
+    obabel_path = repo_paths.OBABEL
     output_mol2 = f"{ligand_code}.mol2"
 
     # Use Open Babel to convert PDB to MOL2 format

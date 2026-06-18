@@ -55,6 +55,14 @@ import threading
 import multiprocessing
 import argparse
 
+# --- locate repo root + shared external paths ---
+import sys as _sys
+from pathlib import Path as _Path
+for _anc in _Path(__file__).resolve().parents:
+    if (_anc / "repo_paths.py").is_file():
+        _sys.path.insert(0, str(_anc)); break
+import repo_paths
+
 # Mapping from three-letter to one-letter amino acid codes.
 aa3to1 = {
     "ALA": 'A', "ARG": 'R', "ASN": 'N', "ASP": 'D', "CYS": 'C',
@@ -106,7 +114,7 @@ if __name__ == "__main__":
     parser.add_argument("--ligand_smiles", type=str, help='JSON string defining ligand SMILES.')
     parser.add_argument("--command_path", type=str, help='Path of the output command file.')
     parser.add_argument("--check_made_output", action="store_true", default=False, help='Check whether Chai-1 predictions were already made.')
-    parser.add_argument("--chai_shell_script", type=str, default="/net/software/lab/chai/chai-lab/run_chai.sh", help='Path of Chai-1 shell script.')
+    parser.add_argument("--chai_shell_script", type=str, default=repo_paths.CHAI_RUN, help='Path of Chai-1 shell script.')
     parser.add_argument("--n_terminus_tag", type=str, default="", help="Optional N-terminal tag (e.g. 'MSG') to prepend to the protein sequence.")
     parser.add_argument("--c_terminus_tag", type=str, default="", help="Optional C-terminal tag (e.g. 'GSAWSHPQFEK') to append to the protein sequence.")
     parser.add_argument("--do_not_make_separate_subdirectories", action="store_true", default=False, help="If specified, do not create separate subdirectories for each input. All outputs will be written directly to the output path.")

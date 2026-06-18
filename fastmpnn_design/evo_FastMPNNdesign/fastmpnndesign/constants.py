@@ -6,6 +6,14 @@ Defines element sets, distance cutoffs, default paths, and other constants.
 
 from typing import FrozenSet, Dict
 
+# --- locate repo root + shared external paths ---
+import sys as _sys
+from pathlib import Path as _Path
+for _anc in _Path(__file__).resolve().parents:
+    if (_anc / "repo_paths.py").is_file():
+        _sys.path.insert(0, str(_anc)); break
+import repo_paths
+
 # Element classifications
 METALS: FrozenSet[str] = frozenset({
     'ZN', 'FE', 'MG', 'CA', 'MN', 'CO', 'NI', 'CU', 'MO', 'W'
@@ -146,7 +154,7 @@ INITIAL_FA_REP_SCALE: float = 0.15  # Stage 1: low repulsion to allow movement
 N_RELAX_STAGES: int = 3  # Number of relaxation stages
 
 # MPNN defaults
-DEFAULT_MPNN_RUNNER: str = "/net/software/lab/fused_mpnn/seth_temp/run.py"
+DEFAULT_MPNN_RUNNER: str = repo_paths.FUSED_MPNN_RUN
 DEFAULT_MODEL_TYPE: str = "ligand_mpnn"
 DEFAULT_ENHANCE_MODEL: str = "plddt_3_20240930-f9c9ea0f"
 DEFAULT_TEMPERATURE: float = 0.1
@@ -154,13 +162,13 @@ DEFAULT_BATCHES: int = 10
 DEFAULT_BATCH_SIZE: int = 1
 DEFAULT_OMIT_AA: str = "CM"
 DEFAULT_SC_DENOISING_STEPS: int = 3
-DEFAULT_APPTAINER_IMAGE: str = "/software/containers/universal.sif"
+DEFAULT_APPTAINER_IMAGE: str = repo_paths.UNIVERSAL_SIF
 
 # Rosetta defaults
-DEFAULT_ROSETTA_PATH: str = "/software/rosetta/latest"
-DEFAULT_PYROSETTA_PATH: str = "/software/pyrosetta/latest"
+DEFAULT_ROSETTA_PATH: str = repo_paths.ROSETTA_LATEST
+DEFAULT_PYROSETTA_PATH: str = repo_paths.PYROSETTA
 DEFAULT_SCOREFUNCTION: str = "beta_jan25"
-DEFAULT_PYROSETTA_IMAGE: str = "/software/containers/pyrosetta.sif"
+DEFAULT_PYROSETTA_IMAGE: str = repo_paths.PYROSETTA_SIF
 
 # Scorefunctions that require special initialization flags
 BETA_SCOREFUNCTIONS: FrozenSet[str] = frozenset({

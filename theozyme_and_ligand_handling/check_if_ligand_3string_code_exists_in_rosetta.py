@@ -85,6 +85,14 @@ import argparse
 import re
 import sys
 
+# --- locate repo root + shared external paths ---
+import sys as _sys
+from pathlib import Path as _Path
+for _anc in _Path(__file__).resolve().parents:
+    if (_anc / "repo_paths.py").is_file():
+        _sys.path.insert(0, str(_anc)); break
+import repo_paths
+
 def parse_args():
     parser = argparse.ArgumentParser(
         description="Check if a 3‑letter ligand code exists in a Rosetta residue_types.txt file."
@@ -96,7 +104,7 @@ def parse_args():
     )
     parser.add_argument(
         "--txt_file_of_rosetta_chemicals", "-f",
-        default="/net/software/rosetta/main/database/chemical/residue_type_sets/fa_standard/residue_types.txt",
+        default=repo_paths.ROSETTA_RESIDUE_TYPES,
         help="Path to the Rosetta residue_types.txt file"
     )
     return parser.parse_args()

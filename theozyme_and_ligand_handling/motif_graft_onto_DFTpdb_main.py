@@ -28,6 +28,8 @@ import os
 import subprocess
 import shutil
 import sys
+from pathlib import Path
+_HERE = Path(__file__).resolve().parent
 
 def parse_args():
     p = argparse.ArgumentParser(
@@ -54,7 +56,7 @@ def main():
     motif_pdb = args.pregrafted_motif_pdb_file
     merges = args.merge
 
-    base_dir = '/home/woodbuse/special_scripts/theozyme_and_ligand_handling'
+    base_dir = str(_HERE)
     step1_script = os.path.join(base_dir, 'motif_graft_onto_DFTpdb__STEP1__remark666_pregrafted_pdb.py')
     step2_script = os.path.join(base_dir, 'motif_graft_onto_DFTpdb__STEP2__perform_grafting.py')
     step3_script = os.path.join(base_dir, 'motif_graft_onto_DFTpdb__STEP3__cleanPDBs.py')

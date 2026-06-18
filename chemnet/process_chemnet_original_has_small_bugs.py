@@ -19,11 +19,19 @@ import argparse
 import math
 from textwrap import wrap
 
+# --- locate repo root + shared external paths ---
+import sys as _sys
+from pathlib import Path as _Path
+for _anc in _Path(__file__).resolve().parents:
+    if (_anc / "repo_paths.py").is_file():
+        _sys.path.insert(0, str(_anc)); break
+import repo_paths
+
 HOME = ""
-sys.path.append(f"{HOME}/net/software/scripts/enzyme_design/utils")
+sys.path.append(repo_paths.ENZYME_DESIGN_UTILS)
 import design_utils
 import scoring_utils
-sys.path.append(f"{HOME}/net/software/scripts/enzyme_design/invrotzyme/utils")
+sys.path.append(repo_paths.INVROTZYME_UTILS)
 import align_pdbs
 
 import warnings

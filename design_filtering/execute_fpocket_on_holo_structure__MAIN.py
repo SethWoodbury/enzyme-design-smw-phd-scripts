@@ -35,6 +35,9 @@ import sys
 import os
 import pandas as pd
 
+from pathlib import Path
+_HERE = Path(__file__).resolve().parent
+
 
 def write_error_csv(agg_csv, msg):
     # Write a CSV with an error_message column
@@ -70,12 +73,12 @@ def main():
     )
     parser.add_argument(
         "--step1_script_path",
-        default="/home/woodbuse/special_scripts/design_filtering/execute_fpocket_on_holo_structure__STEP1_run_fpocket.py",
+        default=str(_HERE / "execute_fpocket_on_holo_structure__STEP1_run_fpocket.py"),
         help="Path to STEP1 fpocket wrapper script."
     )
     parser.add_argument(
         "--step2_script_path",
-        default="/home/woodbuse/special_scripts/design_filtering/execute_fpocket_on_holo_structure__STEP2_compile_fpocket_metrics.py",
+        default=str(_HERE / "execute_fpocket_on_holo_structure__STEP2_compile_fpocket_metrics.py"),
         help="Path to STEP2 compile metrics script."
     )
     parser.add_argument(

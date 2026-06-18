@@ -16,6 +16,14 @@ import os
 import re
 import subprocess
 
+# --- locate repo root + shared external paths ---
+import sys as _sys
+from pathlib import Path as _Path
+for _anc in _Path(__file__).resolve().parents:
+    if (_anc / "repo_paths.py").is_file():
+        _sys.path.insert(0, str(_anc)); break
+import repo_paths
+
 def parse_gaussian_log(log_file):
     """
     Parse a Gaussian log file to verify transition state and extract frequencies.
@@ -55,7 +63,7 @@ def run_openbabel(log_file, output_file):
     Returns:
         bool: True if conversion is successful, False otherwise.
     """
-    obabel_path = "/home/woodbuse/conda_envs/openbabel_env/bin/obabel"
+    obabel_path = repo_paths.OBABEL
     try:
         subprocess.run([obabel_path, "-ig09", log_file, "-oxyz", "-O", output_file], check=True)
         return True

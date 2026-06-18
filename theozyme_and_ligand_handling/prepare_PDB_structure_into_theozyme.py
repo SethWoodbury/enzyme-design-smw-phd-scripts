@@ -7,6 +7,14 @@ Preserve-by-default: no destructive change unless an explicit flag is given.
 """
 import argparse, math, os, re, string, sys
 
+# --- locate repo root + shared external paths ---
+import sys as _sys
+from pathlib import Path as _Path
+for _anc in _Path(__file__).resolve().parents:
+    if (_anc / "repo_paths.py").is_file():
+        _sys.path.insert(0, str(_anc)); break
+import repo_paths
+
 PROTEIN_RESNAMES = {
     "ALA","ARG","ASN","ASP","CYS","GLN","GLU","GLY","HIS","ILE","LEU","LYS",
     "MET","PHE","PRO","SER","THR","TRP","TYR","VAL",
@@ -943,7 +951,7 @@ def parse_cli(argv=None):
     # renumber / checks / debug
     p.add_argument("--renumber_atoms", action="store_true")
     p.add_argument("--rosetta_residue_types",
-        default="/net/software/rosetta/main/database/chemical/residue_type_sets/fa_standard/residue_types.txt")
+        default=repo_paths.ROSETTA_RESIDUE_TYPES)
     p.add_argument("--ccd_timeout", type=float, default=4.0)
     p.add_argument("--no_ligand_code_checks", action="store_true")
     p.add_argument("--preserve_waters", action="store_true",

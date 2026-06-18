@@ -176,6 +176,14 @@ import multiprocessing
 import argparse
 import re
 
+# --- locate repo root + shared external paths ---
+import sys as _sys
+from pathlib import Path as _Path
+for _anc in _Path(__file__).resolve().parents:
+    if (_anc / "repo_paths.py").is_file():
+        _sys.path.insert(0, str(_anc)); break
+import repo_paths
+
 # Mapping from three-letter to one-letter amino acid codes.
 aa3to1 = {
     "ALA": 'A', "ARG": 'R', "ASN": 'N', "ASP": 'D', "CYS": 'C',
@@ -394,7 +402,7 @@ if __name__ == "__main__":
                              "  '{\"group2\": [\"[Zn+2]\",\"SMILES2\"], \"group3\": [\"[Zn+2]\",\"SMILES3\"], \"default\": [\"[Zn+2]\",\"SMILES_def\"]}'\n"
                              "If provided, overrides --ligand_smiles. Keys are matched as substrings of each PDB’s basename.")
     parser.add_argument("--command_path", required=True, help="File where generated Chai-1 commands will be saved.")
-    parser.add_argument("--chai_shell_script", default="/net/software/lab/chai/chai-lab/run_chai.sh",
+    parser.add_argument("--chai_shell_script", default=repo_paths.CHAI_RUN,
                         help="Path to the Chai-1 shell script to invoke.")
     parser.add_argument("--check_made_output", action="store_true", default=False,
                         help="If set, skip any PDB/FASTA entry whose Chai-1 output already exists.")

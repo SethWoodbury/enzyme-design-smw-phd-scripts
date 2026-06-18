@@ -3,8 +3,10 @@
 #SBATCH --gres=gpu:a4000:1
 #SBATCH --time=00:05:00
 #SBATCH --mem=2G
-#SBATCH --output=/home/woodbuse/special_scripts/ESM/diag.%j.out
-#SBATCH --error=/home/woodbuse/special_scripts/ESM/diag.%j.err
+#SBATCH --output=diag.%j.out
+#SBATCH --error=diag.%j.err
+
+ESMC_SIF="${ESMC_SIF:-/net/software/containers/users/woodbuse/esmc.sif}"
 
 echo "host: $(hostname)"
 echo "--- /net mount? ---"
@@ -16,7 +18,7 @@ ls -la /net/software/containers/users/woodbuse 2>&1
 echo "--- readlink chain ---"
 readlink -f /net/software/containers/users/woodbuse 2>&1
 echo "--- stat .sif ---"
-stat /net/software/containers/users/woodbuse/esmc.sif 2>&1 | head
+stat "$ESMC_SIF" 2>&1 | head
 echo "--- /mnt/net visible? ---"
 ls -la /mnt/net 2>&1 | head -5
 echo "--- /mnt/net/software/containers/users/woodbuse ---"

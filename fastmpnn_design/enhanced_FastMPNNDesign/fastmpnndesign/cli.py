@@ -6,7 +6,7 @@ Provides a fully parameterized CLI matching the original script arguments
 plus new MPNN integration options.
 
 Usage:
-    apptainer exec /software/containers/universal.sif python /path/to/cli.py --pdb input.pdb --nstruct 5
+    apptainer exec /net/software/containers/universal.sif python /path/to/cli.py --pdb input.pdb --nstruct 5
 """
 
 import argparse
@@ -60,10 +60,10 @@ Examples:
   python cli.py --pdb input.pdb --params ligand.params --cstfile design.cst
 
   # Using apptainer for MPNN execution
-  apptainer exec /software/containers/universal.sif python cli.py --pdb input.pdb --use_apptainer
+  apptainer exec /net/software/containers/universal.sif python cli.py --pdb input.pdb --use_apptainer
 
   # Full example with all options
-  apptainer exec /software/containers/universal.sif python cli.py \\
+  apptainer exec /net/software/containers/universal.sif python cli.py \\
     --pdb input.pdb \\
     --params ligand.params \\
     --output_dir ./output \\

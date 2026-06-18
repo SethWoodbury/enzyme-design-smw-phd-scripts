@@ -11,6 +11,14 @@ To add a new step or modify existing ones, see the README.md section:
 from pathlib import Path
 from typing import Dict, Any
 
+# --- locate repo root + shared external paths ---
+import sys as _sys
+from pathlib import Path as _Path
+for _anc in _Path(__file__).resolve().parents:
+    if (_anc / "repo_paths.py").is_file():
+        _sys.path.insert(0, str(_anc)); break
+import repo_paths
+
 # =============================================================================
 # Container Configuration
 # =============================================================================
@@ -18,8 +26,8 @@ DEFAULT_CONTAINER_RUNTIME = "apptainer"
 # universal.sif contains both PyRosetta (2026.03) and ProteinMPNN
 # It has beta_jan25 scorefunction, multi-threading, and serialization support
 # Using a single container simplifies execution and avoids nested container overhead
-DEFAULT_UNIVERSAL_CONTAINER = "/net/software/containers/universal.sif"
-DEFAULT_PYROSETTA_CONTAINER = "/net/software/containers/universal.sif"  # Default to universal.sif
+DEFAULT_UNIVERSAL_CONTAINER = repo_paths.UNIVERSAL_SIF
+DEFAULT_PYROSETTA_CONTAINER = repo_paths.UNIVERSAL_SIF  # Default to universal.sif
 
 # =============================================================================
 # Step Script Paths (relative to project root)

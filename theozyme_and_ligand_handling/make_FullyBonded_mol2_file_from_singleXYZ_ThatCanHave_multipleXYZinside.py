@@ -81,6 +81,14 @@ from math import sqrt
 from math import inf
 import re
 
+# --- locate repo root + shared external paths ---
+import sys as _sys
+from pathlib import Path as _Path
+for _anc in _Path(__file__).resolve().parents:
+    if (_anc / "repo_paths.py").is_file():
+        _sys.path.insert(0, str(_anc)); break
+import repo_paths
+
 ### NEW FUNCTION ADDED ###
 def standardize_residue_labels(mol2_file, resid=1, resname="UNL1"):
     """
@@ -443,7 +451,7 @@ def generate_mol2_file(input_xyz, output_basename, output_dir=None):
     output_mol2 = os.path.join(output_dir, f"{output_basename}.mol2")
 
     # Adjust path to obabel as needed:
-    obabel_path = "/home/woodbuse/conda_envs/openbabel_env/bin/obabel"
+    obabel_path = repo_paths.OBABEL
     cmd = f"{obabel_path} -ixyz {input_xyz} -omol2 -O {output_mol2}"
     print("[generate_mol2_file] Running:", cmd)
     os.system(cmd)

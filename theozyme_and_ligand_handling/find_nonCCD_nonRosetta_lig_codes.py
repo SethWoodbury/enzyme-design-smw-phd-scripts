@@ -46,11 +46,16 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import requests
 
+# --- locate repo root + shared external paths ---
+import sys as _sys
+from pathlib import Path as _Path
+for _anc in _Path(__file__).resolve().parents:
+    if (_anc / "repo_paths.py").is_file():
+        _sys.path.insert(0, str(_anc)); break
+import repo_paths
+
 BASE_URL = "https://files.rcsb.org/ligands/view/{code}.cif"
-DEFAULT_ROSETTA_TXT = (
-    "/net/software/rosetta/main/database/chemical/residue_type_sets/"
-    "fa_standard/residue_types.txt"
-)
+DEFAULT_ROSETTA_TXT = repo_paths.ROSETTA_RESIDUE_TYPES
 
 
 # ---------------------------------------------------------------------------

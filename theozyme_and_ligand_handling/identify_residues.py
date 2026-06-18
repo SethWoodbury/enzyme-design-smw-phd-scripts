@@ -4,6 +4,16 @@ import os
 import subprocess
 import argparse
 from collections import Counter
+from pathlib import Path
+_HERE = Path(__file__).resolve().parent
+
+# --- locate repo root + shared external paths ---
+import sys as _sys
+from pathlib import Path as _Path
+for _anc in _Path(__file__).resolve().parents:
+    if (_anc / "repo_paths.py").is_file():
+        _sys.path.insert(0, str(_anc)); break
+import repo_paths
 
 DEBUGGING = False
 
@@ -55,7 +65,7 @@ def parse_pdb(input_pdb):
     return residues
 
 def write_residue_pdbs(residues):
-    obabel_path = "/home/woodbuse/conda_envs/openbabel_env/bin/obabel"
+    obabel_path = repo_paths.OBABEL
     
     print("### RESIDUE FILE PROCESSING ###")
     for index, lines in residues.items():
@@ -109,8 +119,8 @@ def match_residue_smiles(tip_atom_residues_3letter=None):
                 # Prepare arguments for substructure matching script
                 candidate_args = [smiles] + [item for aa in candidates for item in (aa, amino_acid_data[aa]["smiles"])]
                 subprocess_args = [
-                    "python3", 
-                    "/home/woodbuse/special_scripts/theozyme_and_ligand_handling/identify_residues_based_on_substructure.py"
+                    "python3",
+                    str(_HERE / "identify_residues_based_on_substructure.py")
                 ] + candidate_args
 
                 # If DEBUGGING is True, let output print directly; otherwise, capture it

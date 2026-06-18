@@ -8,12 +8,21 @@ Values are extracted from the original fastmpnn_ZnEsterase_SETH_LINKED.py script
 from typing import FrozenSet, Dict
 from pathlib import Path
 
+_HERE = Path(__file__).resolve().parent
+# --- locate repo root + shared external paths ---
+import sys as _sys
+from pathlib import Path as _Path
+for _anc in _Path(__file__).resolve().parents:
+    if (_anc / "repo_paths.py").is_file():
+        _sys.path.insert(0, str(_anc)); break
+import repo_paths
+
 
 # =============================================================================
 # MPNN Defaults
 # =============================================================================
 
-DEFAULT_MPNN_RUNNER: str = "/net/software/lab/fused_mpnn/seth_temp/run.py"
+DEFAULT_MPNN_RUNNER: str = repo_paths.FUSED_MPNN_RUN
 DEFAULT_MODEL_TYPE: str = "ligand_mpnn"
 DEFAULT_ENHANCE_MODEL: str = "plddt_3_20240930-f9c9ea0f"
 DEFAULT_TEMPERATURE: float = 0.3  # Protocol default, lower temps (0.1, 0.2) used in later stages
@@ -21,7 +30,7 @@ DEFAULT_BATCHES: int = 10
 DEFAULT_BATCH_SIZE: int = 1
 DEFAULT_OMIT_AA: str = "CM"  # Omit Cysteine and Methionine
 DEFAULT_SC_DENOISING_STEPS: int = 3
-DEFAULT_APPTAINER_IMAGE: str = "/software/containers/universal.sif"
+DEFAULT_APPTAINER_IMAGE: str = repo_paths.UNIVERSAL_SIF
 
 # 2nd layer MPNN temperatures (from original lines 404)
 SECOND_LAYER_TEMPERATURES: tuple = (0.1, 0.2)
@@ -34,7 +43,7 @@ SECOND_LAYER_BATCH_SIZE: int = 2
 # =============================================================================
 
 DEFAULT_SCOREFUNCTION: str = "beta_jan25"  # Updated from beta_nov16 to newest
-DEFAULT_DALPHABALL: str = "/net/software/lab/scripts/enzyme_design/DAlphaBall.gcc"
+DEFAULT_DALPHABALL: str = repo_paths.DALPHABALL
 DEFAULT_PARAMS_PATH: str = "/home/ikalvet/projects/Organophosphate/Esterase/theozyme/ZRE/ZRE.params"
 
 # Beta scorefunctions that require special initialization
@@ -175,7 +184,7 @@ BACKBONE_ATOMS: FrozenSet[str] = frozenset({'N', 'CA', 'C', 'O', 'H', 'HA'})
 # =============================================================================
 
 # FastMPNNDesign module path (used for importing)
-FASTMPNN_DESIGN_PATH: str = "/home/woodbuse/special_scripts/fastmpnn_design/FastMPNNDesign"
+FASTMPNN_DESIGN_PATH: str = str(_HERE.parents[1] / "FastMPNNDesign")
 
 # Design utilities path
-DESIGN_UTILS_PATH: str = "/software/scripts/enzyme_design/utils"
+DESIGN_UTILS_PATH: str = repo_paths.ENZYME_DESIGN_UTILS

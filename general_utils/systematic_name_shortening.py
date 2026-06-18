@@ -66,7 +66,9 @@ Driver cell (paste into a notebook / driver script and edit)
     extra_args        = ""            # any extra raw CLI flags
 
     ### CONSTANTS ###
-    script = "/home/woodbuse/special_scripts/general_utils/systematic_name_shortening.py"
+    from pathlib import Path
+    _HERE = Path(__file__).resolve().parent
+    script = str(_HERE / "systematic_name_shortening.py")
 
     ### GENERATE & PRINT COMMAND ###
     cmd_parts = ["python3", script, shlex.quote(INPUT_DIR_OR_GLOB)]

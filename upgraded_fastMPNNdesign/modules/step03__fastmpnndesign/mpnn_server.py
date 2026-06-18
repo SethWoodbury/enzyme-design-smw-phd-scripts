@@ -37,6 +37,14 @@ import uuid
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
+# --- locate repo root + shared external paths ---
+import sys as _sys
+from pathlib import Path as _Path
+for _anc in _Path(__file__).resolve().parents:
+    if (_anc / "repo_paths.py").is_file():
+        _sys.path.insert(0, str(_anc)); break
+import repo_paths
+
 import numpy as np
 import torch
 
@@ -74,16 +82,16 @@ class MPNNServer:
 
     # Model checkpoint paths (from run.py defaults)
     CHECKPOINT_PATHS = {
-        "protein_mpnn": "/databases/mpnn/vanilla_model_weights/v_48_020.pt",
-        "ligand_mpnn": "/databases/mpnn/ligand_mpnn_model_weights/s25_r010_t300_p.pt",
-        "per_residue_label_membrane_mpnn": "/databases/mpnn/tmd_per_residue_weights/tmd_v_48_020.pt",
-        "global_label_membrane_mpnn": "/databases/mpnn/tmd_weights/v_48_020.pt",
-        "soluble_mpnn": "/databases/mpnn/no_transmembrane/v_48_020.pt",
-        "pssm_mpnn": "/databases/mpnn/pssm_model_weights/v_48_020.pt",
-        "antibody_mpnn": "/databases/mpnn/antibody_mpnn_model_weights/v_48_020_bias_005.pt",
-        "msa_mpnn": "/projects/ml/struc2seq/msa_mpnn_models/dropout_v1/last.pt",
+        "protein_mpnn": f"{repo_paths.VANILLA_MPNN_WEIGHTS}/v_48_020.pt",
+        "ligand_mpnn": f"{repo_paths.LIGANDMPNN_WEIGHTS}/s25_r010_t300_p.pt",
+        "per_residue_label_membrane_mpnn": f"{repo_paths.MPNN_WEIGHTS}/tmd_per_residue_weights/tmd_v_48_020.pt",
+        "global_label_membrane_mpnn": f"{repo_paths.MPNN_WEIGHTS}/tmd_weights/v_48_020.pt",
+        "soluble_mpnn": f"{repo_paths.MPNN_WEIGHTS}/no_transmembrane/v_48_020.pt",
+        "pssm_mpnn": f"{repo_paths.MPNN_WEIGHTS}/pssm_model_weights/v_48_020.pt",
+        "antibody_mpnn": f"{repo_paths.MPNN_WEIGHTS}/antibody_mpnn_model_weights/v_48_020_bias_005.pt",
+        "msa_mpnn": f"{repo_paths.SOLUBLE_MPNN_MODELS}/msa_mpnn_models/dropout_v1/last.pt",
     }
-    CHECKPOINT_SC = "/projects/ml/struc2seq/ligandMPNN_models/b_v1/s_300756.pt"
+    CHECKPOINT_SC = f"{repo_paths.SOLUBLE_MPNN_MODELS}/ligandMPNN_models/b_v1/s_300756.pt"
 
     # Amino acid mappings
     RESTYPE_STR_TO_INT = {

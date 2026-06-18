@@ -22,9 +22,10 @@ Author: Seth M. Woodbury, David Baker Lab, UW (woodbuse@uw.edu)
 
 import os
 import shlex
+from pathlib import Path
+_HERE = Path(__file__).resolve().parent
 
-MAIN_SCRIPT = ("/home/woodbuse/special_scripts/theozyme_and_ligand_handling/"
-               "prepare_PDB_structure_into_theozyme.py")
+MAIN_SCRIPT = str(_HERE / "prepare_PDB_structure_into_theozyme.py")
 
 
 def build_command(

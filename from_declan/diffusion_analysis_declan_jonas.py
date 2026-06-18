@@ -12,6 +12,14 @@ import pyrosetta.rosetta
 from pyrosetta.rosetta.core.select import residue_selector
 from pyrosetta.rosetta.core.pack.task import operation
 
+# --- locate repo root + shared external paths ---
+import sys as _sys
+from pathlib import Path as _Path
+for _anc in _Path(__file__).resolve().parents:
+    if (_anc / "repo_paths.py").is_file():
+        _sys.path.insert(0, str(_anc)); break
+import repo_paths
+
 def list_pdb_files(path):
     '''List all files that end with ".pdb" in a directory'''
     files = [i for i in os.listdir(path) if i.endswith('.pdb')]
@@ -335,7 +343,7 @@ if __name__ == "__main__":
         print(f'########## Task {task_id} of {num_tasks} total tasks')
         print(f'########## Analyzing pdb files {start_file} to {end_file}')
 
-    DAB = '/net/software/lab/scripts/enzyme_design/DAlphaBall.gcc'
+    DAB = repo_paths.DALPHABALL
     if not os.path.exists(DAB):
        DAB = None
     assert DAB is not None, 'Please compile DAlphaBall.gcc and manually provide a path to it in this script under the variable `DAB`\n'\

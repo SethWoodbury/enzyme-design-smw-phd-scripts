@@ -50,16 +50,21 @@ from dataclasses import dataclass, field
 from math import sqrt, inf
 from typing import Dict, List, Optional, Sequence, Tuple
 
+# --- locate repo root + shared external paths ---
+import sys as _sys
+from pathlib import Path as _Path
+for _anc in _Path(__file__).resolve().parents:
+    if (_anc / "repo_paths.py").is_file():
+        _sys.path.insert(0, str(_anc)); break
+import repo_paths
+
 ###############################################################################
 # PATH CONSTANTS (EDIT HERE IF NEEDED)
 ###############################################################################
 
-OPENBABEL_BIN = "/home/woodbuse/conda_envs/openbabel_env/bin/obabel"
-MOLFILE_TO_PARAMS_SCRIPT = "/net/software/rosetta/main/source/scripts/python/public/molfile_to_params.py"
-DEFAULT_ROSETTA_RESIDUE_TYPES = (
-    "/net/software/rosetta/main/database/chemical/residue_type_sets/"
-    "fa_standard/residue_types.txt"
-)
+OPENBABEL_BIN = repo_paths.OBABEL
+MOLFILE_TO_PARAMS_SCRIPT = repo_paths.MOLFILE_TO_PARAMS
+DEFAULT_ROSETTA_RESIDUE_TYPES = repo_paths.ROSETTA_RESIDUE_TYPES
 
 VALID_MODES = ("network", "conformer")
 

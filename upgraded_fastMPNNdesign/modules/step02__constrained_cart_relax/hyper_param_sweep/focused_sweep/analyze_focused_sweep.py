@@ -10,8 +10,11 @@ import json
 import glob
 import argparse
 from collections import defaultdict
+from pathlib import Path
 from typing import List, Dict
 import statistics
+
+_HERE = Path(__file__).resolve().parent
 
 def parse_job_name(job_name: str) -> Dict:
     """Extract parameters from job name."""
@@ -280,7 +283,7 @@ def analyze_sweep(output_dir: str):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Analyze focused parameter sweep results")
     parser.add_argument("--output_dir", type=str,
-                        default="/home/woodbuse/special_scripts/upgraded_fastMPNNdesign/modules/step02__constrained_cart_relax/hyper_param_sweep/focused_sweep/outputs",
+                        default=str(_HERE / "outputs"),
                         help="Directory containing sweep output directories")
     args = parser.parse_args()
 

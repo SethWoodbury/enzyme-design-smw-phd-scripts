@@ -77,6 +77,14 @@ import pyrosetta.rosetta
 import pyrosetta.distributed.io
 from pyrosetta.rosetta.core.scoring import score_type_from_name
 
+# --- locate repo root + shared external paths ---
+import sys as _sys
+from pathlib import Path as _Path
+for _anc in _Path(__file__).resolve().parents:
+    if (_anc / "repo_paths.py").is_file():
+        _sys.path.insert(0, str(_anc)); break
+import repo_paths
+
 # =============================================================================
 # GLOBAL CONSTANTS & SIMPLE UTILITIES
 # =============================================================================
@@ -495,7 +503,7 @@ def init_pyrosetta_with_params(params):
         for p in params:
             extra_res_fa += f" {p}"
 
-    DAB = "/net/software/lab/scripts/enzyme_design/DAlphaBall.gcc"
+    DAB = repo_paths.DALPHABALL
     if not os.path.exists(DAB):
         DAB = None
 

@@ -26,9 +26,11 @@ import os
 import sys
 import subprocess
 from collections import defaultdict
+from pathlib import Path
+_HERE = Path(__file__).resolve().parent
 
 # Base directory for the helper scripts
-scripts_directory = "/home/woodbuse/special_scripts/theozyme_and_ligand_handling/"
+scripts_directory = str(_HERE)
 
 def parse_args():
     p = argparse.ArgumentParser(description="Extract ligand and generate mol2 & params")

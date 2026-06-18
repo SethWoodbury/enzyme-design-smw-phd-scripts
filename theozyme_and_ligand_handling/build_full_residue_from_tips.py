@@ -5,9 +5,11 @@ import argparse
 import numpy as np
 import sys
 import itertools
+from pathlib import Path
+_HERE = Path(__file__).resolve().parent
 
 # Add the directory containing the helper script to sys.path
-sys.path.append('/home/woodbuse/special_scripts/theozyme_and_ligand_handling')  # Update this path as needed
+sys.path.append(str(_HERE))  # resolved from this script's own location
 
 # Import the functions from the helper script
 from build_full_residue_from_tips_INITIAL_FUNCTIONS import (

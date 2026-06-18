@@ -4,12 +4,12 @@
 #SBATCH -c 1
 #SBATCH --mem=4g
 #SBATCH -t 02:00:00
-#SBATCH -o /home/woodbuse/special_scripts/upgraded_fastMPNNdesign/modules/step02__constrained_cart_relax/hyper_param_sweep/logs/sweep_%a.stdout
-#SBATCH -e /home/woodbuse/special_scripts/upgraded_fastMPNNdesign/modules/step02__constrained_cart_relax/hyper_param_sweep/logs/sweep_%a.stderr
+#SBATCH -o logs/sweep_%a.stdout
+#SBATCH -e logs/sweep_%a.stderr
 #SBATCH -a 1-108%50
 
 # Each job runs one command from the commands file
-CMD=$(sed -n "${SLURM_ARRAY_TASK_ID}p" /home/woodbuse/special_scripts/upgraded_fastMPNNdesign/modules/step02__constrained_cart_relax/hyper_param_sweep/cmds/all_sweep_commands.txt)
+CMD=$(sed -n "${SLURM_ARRAY_TASK_ID}p" "${SLURM_SUBMIT_DIR:-$(pwd)}/cmds/all_sweep_commands.txt")
 
 echo "Job ${SLURM_ARRAY_TASK_ID} starting at $(date)"
 echo "Command: ${CMD}"

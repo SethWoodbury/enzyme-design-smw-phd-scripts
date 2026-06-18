@@ -7,11 +7,11 @@ design, structure-prediction input/output processing, design filtering and metri
 and a range of PDB/sequence utilities.
 
 > **Environment note.** These scripts were written to run on the **IPD compute
-> cluster** (SLURM scheduler, shared `/net/software`, `/software/containers/*.sif`,
+> cluster** (SLURM scheduler, shared `/net/software`, `/net/software/containers/*.sif`,
 > `/databases`, PyRosetta, etc.). Lab members on that cluster can run them as-is.
-> Paths to shared cluster software are documented and centralized (see
-> *Path configuration*, added alongside the path refactor). Off-cluster users will
-> need the corresponding tools installed and the relevant paths pointed at them.
+> Paths to shared cluster software are documented and centralized in
+> [`repo_paths.py`](repo_paths.py) (see **Path configuration** below). Off-cluster
+> users need the corresponding tools installed and the relevant paths pointed at them.
 
 ## Usage
 
@@ -24,6 +24,33 @@ python theozyme_and_ligand_handling/make_cst_file_from_pdb__MAIN.py --help
 
 Many multi-step tools follow a `*__MAIN.py` (orchestrator) + `*__STEP1_*.py` /
 `*__STEP2_*.py` (workers) convention, where the `__MAIN` script dispatches the steps.
+
+## Path configuration
+
+Paths are resolved so that a fresh clone works without any setup step:
+
+- **Internal paths** (one script calling another script or data file *inside this
+  repo*) are resolved at runtime from each script's own location
+  (`pathlib.Path(__file__)`). Nothing to edit when you clone the repo elsewhere or
+  run as a different user — and it works transparently across login vs. compute
+  nodes (e.g. the `/mnt/home/...` prefix on compute nodes).
+
+- **External paths** (shared cluster software, containers, model weights,
+  databases, Open Babel, the external `fused_mpnn` engine, …) are centralized as
+  named constants in [`repo_paths.py`](repo_paths.py). On the IPD cluster the
+  defaults work as-is. To point any of them elsewhere, set an environment variable
+  of the same name:
+
+  ```bash
+  export OBABEL=/path/to/obabel
+  export UNIVERSAL_SIF=/path/to/universal.sif
+  export FUSED_MPNN_DIR=/path/to/fused_mpnn_api
+  python repo_paths.py        # prints every resolved path and its source (default/env)
+  ```
+
+  `OBABEL` is auto-detected: `$OBABEL` → `obabel` on `$PATH` → a lab-shared install
+  (if present) → the historical fallback. (The old find-and-replace
+  `setup_special_scripts.py` is retired — it now just prints the resolved config.)
 
 ## Layout
 

@@ -16,8 +16,11 @@ import os
 import json
 import glob
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import List, Dict, Optional
 import argparse
+
+_HERE = Path(__file__).resolve().parent
 
 
 @dataclass
@@ -410,7 +413,7 @@ def analyze_sweep(output_dir: str):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Analyze parameter sweep results")
     parser.add_argument("--output_dir", type=str,
-                        default="/home/woodbuse/special_scripts/upgraded_fastMPNNdesign/modules/step02__constrained_cart_relax/hyper_param_sweep/outputs",
+                        default=str(_HERE / "outputs"),
                         help="Directory containing sweep output directories")
     args = parser.parse_args()
 

@@ -11,6 +11,8 @@ from pathlib import Path
 from typing import Dict, List, Optional
 import argparse
 
+_HERE = Path(__file__).resolve().parent
+
 
 def load_results(output_dir: str) -> List[Dict]:
     """Load all result JSON files from sweep outputs."""
@@ -145,7 +147,7 @@ def main():
     )
     parser.add_argument(
         "--output_dir",
-        default="/home/woodbuse/special_scripts/upgraded_fastMPNNdesign/modules/step03__fastmpnndesign/hyper_param_sweep/outputs",
+        default=str(_HERE / "outputs"),
         help="Directory containing sweep outputs"
     )
     parser.add_argument(

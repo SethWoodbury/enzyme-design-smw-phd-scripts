@@ -17,6 +17,14 @@ import argparse
 import subprocess
 import numpy as np
 
+# --- locate repo root + shared external paths ---
+import sys as _sys
+from pathlib import Path as _Path
+for _anc in _Path(__file__).resolve().parents:
+    if (_anc / "repo_paths.py").is_file():
+        _sys.path.insert(0, str(_anc)); break
+import repo_paths
+
 # Path setup - local modules are in same directory
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, SCRIPT_DIR)
@@ -57,7 +65,7 @@ def _early_reexec_in_container(container_image: str = DEFAULT_APPTAINER_IMAGE):
     bind_paths.add(os.path.dirname(script_path))
 
     # Always bind fused_mpnn directory
-    fused_mpnn_dir = "/net/software/lab/fused_mpnn"
+    fused_mpnn_dir = repo_paths.FUSED_MPNN_ROOT
     if os.path.exists(fused_mpnn_dir):
         bind_paths.add(fused_mpnn_dir)
 
@@ -169,7 +177,7 @@ def reexec_in_container(container_image: str = DEFAULT_APPTAINER_IMAGE, reason: 
     bind_paths.add(os.path.dirname(script_path))
 
     # Always bind the fused_mpnn directory
-    fused_mpnn_dir = "/net/software/lab/fused_mpnn"
+    fused_mpnn_dir = repo_paths.FUSED_MPNN_ROOT
     if os.path.exists(fused_mpnn_dir):
         bind_paths.add(fused_mpnn_dir)
 

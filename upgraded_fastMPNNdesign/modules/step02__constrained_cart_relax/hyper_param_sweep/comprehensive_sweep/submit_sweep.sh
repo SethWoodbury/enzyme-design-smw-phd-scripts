@@ -5,8 +5,8 @@
 #SBATCH --mem=4g
 #SBATCH -t 02:00:00
 #SBATCH --exclude=c1127
-#SBATCH -o /home/woodbuse/special_scripts/upgraded_fastMPNNdesign/modules/step02__constrained_cart_relax/hyper_param_sweep/comprehensive_sweep/logs/sweep_%a.stdout
-#SBATCH -e /home/woodbuse/special_scripts/upgraded_fastMPNNdesign/modules/step02__constrained_cart_relax/hyper_param_sweep/comprehensive_sweep/logs/sweep_%a.stderr
+#SBATCH -o logs/sweep_%a.stdout
+#SBATCH -e logs/sweep_%a.stderr
 #SBATCH -a 1-2304%100
 
 # ============================================================================
@@ -27,7 +27,7 @@
 # ============================================================================
 
 # Get command for this array task
-CMD=$(sed -n "${SLURM_ARRAY_TASK_ID}p" /home/woodbuse/special_scripts/upgraded_fastMPNNdesign/modules/step02__constrained_cart_relax/hyper_param_sweep/comprehensive_sweep/cmds/all_sweep_commands.txt)
+CMD=$(sed -n "${SLURM_ARRAY_TASK_ID}p" "${SLURM_SUBMIT_DIR:-$(pwd)}/cmds/all_sweep_commands.txt")
 
 echo "=============================================="
 echo "Job ${SLURM_ARRAY_TASK_ID} starting at $(date)"

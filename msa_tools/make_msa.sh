@@ -40,7 +40,8 @@ then
 fi
 
 # setup hhblits command
-export HHLIB=/software/hhsuite/build/bin/
+HHSUITE="${HHSUITE:-/net/software/hhsuite}"
+export HHLIB="$HHSUITE/build/bin/"
 export PATH=$HHLIB:$PATH
 HHBLITS_UR30="hhblits -o /dev/null -mact 0.35 -maxfilt 100000000 -neffmax 20 -cov 25 -cpu $CPU -nodiff -realign_max 100000000 -maxseq 1000000 -maxmem $MEM -n 4 -d $DB_UR30"
 HHBLITS_BFD="hhblits -o /dev/null -mact 0.35 -maxfilt 100000000 -neffmax 20 -cov 25 -cpu $CPU -nodiff -realign_max 100000000 -maxseq 1000000 -maxmem $MEM -n 4 -d $DB_BFD"

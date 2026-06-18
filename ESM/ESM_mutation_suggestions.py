@@ -7,6 +7,14 @@ from typing import Dict, Iterable, List, Optional, Tuple
 import torch
 import esm
 
+# --- locate repo root + shared external paths ---
+import sys as _sys
+from pathlib import Path as _Path
+for _anc in _Path(__file__).resolve().parents:
+    if (_anc / "repo_paths.py").is_file():
+        _sys.path.insert(0, str(_anc)); break
+import repo_paths
+
 
 ESM_MODEL_NAMES = [
     "esm2_t48_15B_UR50D",
@@ -104,7 +112,7 @@ def create_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--weights_dir",
         type=str,
-        default="/databases/esmfold",
+        default=repo_paths.ESMFOLD_DB,
         help="Directory with local ESM2 .pt weights (fallback to download if missing).",
     )
     parser.add_argument(

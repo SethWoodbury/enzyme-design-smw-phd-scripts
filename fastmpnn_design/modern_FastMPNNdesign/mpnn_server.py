@@ -7,7 +7,7 @@ eliminating the ~2-5 second overhead of weight loading for each MPNN call.
 
 Usage:
     # Start server (inside container):
-    apptainer exec --network host /software/containers/universal.sif \
+    apptainer exec --network host /net/software/containers/universal.sif \
         python mpnn_server.py --port 5000 --model_type ligand_mpnn
 
     # Connect from client:
@@ -23,6 +23,13 @@ import socket
 import struct
 import tempfile
 import argparse
+# --- locate repo root + shared external paths ---
+import sys as _sys
+from pathlib import Path as _Path
+for _anc in _Path(__file__).resolve().parents:
+    if (_anc / "repo_paths.py").is_file():
+        _sys.path.insert(0, str(_anc)); break
+import repo_paths
 import traceback
 import threading
 from typing import Dict, Optional
@@ -93,7 +100,7 @@ class MPNNServer:
 
         # Import fused_mpnn - this should be available in the container
         try:
-            sys.path.insert(0, "/net/software/lab/fused_mpnn/seth_temp")
+            sys.path.insert(0, str(_Path(repo_paths.FUSED_MPNN_RUN).parent))
             import fused_mpnn
             self._fused_mpnn = fused_mpnn
         except ImportError as e:

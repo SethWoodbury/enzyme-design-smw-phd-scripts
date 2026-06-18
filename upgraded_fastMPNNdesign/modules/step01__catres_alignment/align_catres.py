@@ -15,8 +15,11 @@ Outputs:
     - <outdir>/<basename>_interactions.json: Interaction analysis for each catres_subset residue
 """
 import argparse, json, logging, os, sys
+from pathlib import Path
 from typing import Dict, List, Optional, Set, Tuple
 import numpy as np
+
+_HERE = Path(__file__).resolve().parent
 
 # Add module_utils to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -27,9 +30,9 @@ from module_utils.pdb_utils import (parse_remark_666, parse_catres_subset, read_
 # ══════════════════════════════════════════════════════════════════════════════════════════════════
 # CONSTANTS
 # ══════════════════════════════════════════════════════════════════════════════════════════════════
-TEST_INPUT_PDB = "/home/woodbuse/special_scripts/upgraded_fastMPNNdesign/modules/step01__catres_alignment/test/input_pdb.pdb"
-TEST_REF_PDB = "/home/woodbuse/special_scripts/upgraded_fastMPNNdesign/modules/step01__catres_alignment/test/ref_pdb.pdb"
-TEST_OUTDIR = "/home/woodbuse/special_scripts/upgraded_fastMPNNdesign/modules/step01__catres_alignment/test/output_dir"
+TEST_INPUT_PDB = str(_HERE / "test/input_pdb.pdb")
+TEST_REF_PDB = str(_HERE / "test/ref_pdb.pdb")
+TEST_OUTDIR = str(_HERE / "test/output_dir")
 TEST_CATRES_SUBSET = "1,2,3,4,5,6,7,8,9,10,11,13,15,16,17,18,19"
 
 HBOND_DIST_MAX = 3.5           # Max distance (A) for hydrogen bond detection

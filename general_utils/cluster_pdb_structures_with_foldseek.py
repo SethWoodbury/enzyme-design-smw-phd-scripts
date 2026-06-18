@@ -166,6 +166,14 @@ import time
 from datetime import datetime
 from pathlib import Path
 
+# --- locate repo root + shared external paths ---
+import sys as _sys
+from pathlib import Path as _Path
+for _anc in _Path(__file__).resolve().parents:
+    if (_anc / "repo_paths.py").is_file():
+        _sys.path.insert(0, str(_anc)); break
+import repo_paths
+
 
 SUPPORTED_SUFFIXES = (
     ".mmcif.gz",
@@ -320,7 +328,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--apptainer-image",
-        default="/net/software/containers/universal.sif",
+        default=repo_paths.UNIVERSAL_SIF,
         help=(
             "Apptainer image used to run Foldseek. The host Foldseek checkout "
             "is bind-mounted into this container and executed there."
@@ -328,7 +336,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--foldseek-root",
-        default="/net/software/foldseek",
+        default=repo_paths.FOLDSEEK,
         help=(
             "Host path to the Foldseek checkout containing build/src/foldseek. "
             "The script bind-mounts this location as /opt/foldseek inside the "

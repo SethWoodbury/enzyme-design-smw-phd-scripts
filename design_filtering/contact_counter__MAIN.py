@@ -30,10 +30,21 @@ import shlex
 import sys
 import glob
 
-STEP1_SCRIPT = "/home/woodbuse/special_scripts/design_filtering/contact_counter__STEP1_calculate_contacts.py"
+from pathlib import Path
+_HERE = Path(__file__).resolve().parent
 
-STEP2_CONTAINER = "/software/containers/crispy.sif"
-STEP2_SCRIPT    = "/home/woodbuse/special_scripts/design_filtering/contact_counter__STEP2_parse_coord_clouds_for_metrics.py"
+# --- locate repo root + shared external paths ---
+import sys as _sys
+from pathlib import Path as _Path
+for _anc in _Path(__file__).resolve().parents:
+    if (_anc / "repo_paths.py").is_file():
+        _sys.path.insert(0, str(_anc)); break
+import repo_paths
+
+STEP1_SCRIPT = str(_HERE / "contact_counter__STEP1_calculate_contacts.py")
+
+STEP2_CONTAINER = repo_paths.CRISPY_SIF
+STEP2_SCRIPT    = str(_HERE / "contact_counter__STEP2_parse_coord_clouds_for_metrics.py")
 
 
 def parse_args():

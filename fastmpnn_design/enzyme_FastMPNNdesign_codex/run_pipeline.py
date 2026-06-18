@@ -108,7 +108,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--stage1_image",
         type=str,
-        default="/software/containers/universal.sif",
+        default="/net/software/containers/universal.sif",
         help="Apptainer image for stage 1.",
     )
     parser.add_argument("--stage2_image", type=str, help="Apptainer image for stage 2.")

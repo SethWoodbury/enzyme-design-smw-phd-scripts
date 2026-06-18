@@ -56,11 +56,14 @@ import multiprocessing as mp
 import time
 import pandas as pd
 
+from pathlib import Path
+_HERE = Path(__file__).resolve().parent
+
 
 # paths to main scripts
-CONTACT_MAIN = "/home/woodbuse/special_scripts/design_filtering/contact_counter__MAIN.py"
-PS_MAIN      = "/home/woodbuse/special_scripts/design_filtering/protein_size_shape_metrics__MAIN.py"
-PF_MAIN      = "/home/woodbuse/special_scripts/design_filtering/execute_fpocket_on_holo_structure__MAIN.py"
+CONTACT_MAIN = str(_HERE / "contact_counter__MAIN.py")
+PS_MAIN      = str(_HERE / "protein_size_shape_metrics__MAIN.py")
+PF_MAIN      = str(_HERE / "execute_fpocket_on_holo_structure__MAIN.py")
 
 
 def run_one(pdb_file, args):

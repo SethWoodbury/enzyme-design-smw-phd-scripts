@@ -51,7 +51,15 @@ from typing import Optional
 # Constants
 # ---------------------------------------------------------------------------
 
-DEFAULT_CONVERTER = "/software/containers/users/sklein89/maxit.sif"
+# --- locate repo root + shared external paths ---
+import sys as _sys
+from pathlib import Path as _Path
+for _anc in _Path(__file__).resolve().parents:
+    if (_anc / "repo_paths.py").is_file():
+        _sys.path.insert(0, str(_anc)); break
+import repo_paths
+
+DEFAULT_CONVERTER = repo_paths.MAXIT_SIF
 
 MANIFEST_NAME    = ".af3_manifest.json"
 LOCK_NAME        = ".af3_lock"

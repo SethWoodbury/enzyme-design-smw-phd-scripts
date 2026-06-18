@@ -1,3 +1,7 @@
+from pathlib import Path as _Path
+_HERE = _Path(__file__).resolve().parent
+_SCRIPTS_DIR = _HERE.parent  # the theozyme_and_ligand_handling/ directory
+
 from conftest import load_mod
 
 def test_module_imports_without_running():
@@ -815,7 +819,7 @@ def test_acceptance_flagged_run(tmp_path):
 
 def test_driver_cell_builds_command(tmp_path, monkeypatch):
     import importlib, sys, os
-    sys.path.insert(0, "/home/woodbuse/special_scripts/theozyme_and_ligand_handling")
+    sys.path.insert(0, str(_SCRIPTS_DIR))
     drv = importlib.import_module("prepare_PDB_structure_into_theozyme__DRIVER_CELL")
     cmd = drv.build_command(
         input_pdb="/x/in.pdb", output_pdb="/x/out.pdb",
@@ -834,8 +838,7 @@ def test_driver_cell_template_txt_exists_and_is_valid():
     """The DRIVER_CELL_TEMPLATE.txt must exist, contain the script path,
     mention key flags, and contain syntactically valid Python."""
     import os
-    path = ("/home/woodbuse/special_scripts/theozyme_and_ligand_handling/"
-            "prepare_PDB_structure_into_theozyme__DRIVER_CELL_TEMPLATE.txt")
+    path = str(_SCRIPTS_DIR / "prepare_PDB_structure_into_theozyme__DRIVER_CELL_TEMPLATE.txt")
     assert os.path.isfile(path), f"Template txt not found at {path}"
     content = open(path).read()
     assert "prepare_PDB_structure_into_theozyme.py" in content, \
@@ -864,7 +867,7 @@ def test_driver_surface_is_complete():
     --ccd_timeout in the old files) and PASS after.
     """
     import importlib, sys, os, re, inspect
-    sys.path.insert(0, "/home/woodbuse/special_scripts/theozyme_and_ligand_handling")
+    sys.path.insert(0, str(_SCRIPTS_DIR))
 
     # ── 1. Collect canonical flag set from parse_cli ─────────────────────────
     from prepare_PDB_structure_into_theozyme import parse_cli
@@ -877,8 +880,7 @@ def test_driver_surface_is_complete():
         f"Expected >=34 optional flags from parse_cli, got {len(optional_flags)}")
 
     # ── 2. Assert every flag appears literally in DRIVER_CELL_TEMPLATE.txt ───
-    template_path = ("/home/woodbuse/special_scripts/theozyme_and_ligand_handling/"
-                     "prepare_PDB_structure_into_theozyme__DRIVER_CELL_TEMPLATE.txt")
+    template_path = str(_SCRIPTS_DIR / "prepare_PDB_structure_into_theozyme__DRIVER_CELL_TEMPLATE.txt")
     assert os.path.isfile(template_path), f"Template not found: {template_path}"
     template_content = open(template_path).read()
 
@@ -1335,8 +1337,7 @@ def test_defect6_driver_template_no_bare_code_in_merge_only():
     copy it, hit parse_selector ValueError at runtime.
     Post-fix: example updated to valid selector syntax like 'Z:LIG:901'."""
     import os
-    path = ("/home/woodbuse/special_scripts/theozyme_and_ligand_handling/"
-            "prepare_PDB_structure_into_theozyme__DRIVER_CELL_TEMPLATE.txt")
+    path = str(_SCRIPTS_DIR / "prepare_PDB_structure_into_theozyme__DRIVER_CELL_TEMPLATE.txt")
     assert os.path.isfile(path)
     content = open(path).read()
 
@@ -1352,8 +1353,7 @@ def test_defect6_driver_cell_merge_only_docstring_valid():
     syntax (chain+resseq or CHAIN:RESNAME:RESSEQ), not bare codes.
     Pre-fix: comment said 'list[str] → --merge_only' with no selector hint.
     Post-fix: comment explicitly notes selector form."""
-    content = open("/home/woodbuse/special_scripts/theozyme_and_ligand_handling/"
-                   "prepare_PDB_structure_into_theozyme__DRIVER_CELL.py").read()
+    content = open(str(_SCRIPTS_DIR / "prepare_PDB_structure_into_theozyme__DRIVER_CELL.py")).read()
     # Must mention selector syntax (at least one of these keywords)
     assert ("selector" in content or "A901" in content or "RESNAME" in content
             or "CHAIN:RESNAME:RESSEQ" in content), (

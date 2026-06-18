@@ -13,7 +13,14 @@ import io
 import copy
 import time
 import pandas as pd
-proteinmpnn_dir = '/net/software/lab/scripts/enzyme_design/fused_mpnn_api'
+# --- locate repo root + shared external paths ---
+import sys as _sys
+from pathlib import Path as _Path
+for _anc in _Path(__file__).resolve().parents:
+    if (_anc / "repo_paths.py").is_file():
+        _sys.path.insert(0, str(_anc)); break
+import repo_paths
+proteinmpnn_dir = repo_paths.FUSED_MPNN_DIR
 sys.path.append(proteinmpnn_dir)
 import fusedmpnn
 SCRIPT_DIR = os.path.dirname(__file__)

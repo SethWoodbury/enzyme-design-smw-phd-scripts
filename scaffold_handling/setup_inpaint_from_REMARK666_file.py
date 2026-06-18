@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-@author: Indrek Kalvet & Seth M. Woodbury -> Modified on 3/12/25 & must use `/software/containers/crispy.sif` apptainer
+@author: Indrek Kalvet & Seth M. Woodbury -> Modified on 3/12/25 & must use `/net/software/containers/crispy.sif` apptainer
 ikalvet@uw.edu
 """
 import glob
@@ -21,7 +21,15 @@ import pyrosetta as pyr
 import pyrosetta.rosetta
 import pyrosetta.distributed.io
 
-sys.path.append("/software/scripts/enzyme_design/utils")
+# --- locate repo root + shared external paths ---
+import sys as _sys
+from pathlib import Path as _Path
+for _anc in _Path(__file__).resolve().parents:
+    if (_anc / "repo_paths.py").is_file():
+        _sys.path.insert(0, str(_anc)); break
+import repo_paths
+
+sys.path.append(repo_paths.ENZYME_DESIGN_UTILS)
 import design_utils
 import scoring_utils
 
@@ -85,7 +93,7 @@ def main(args):
             
             # --- TRB dependencies removed ---
             # Catalytic residues will be parsed from the REMARK 666 lines.
-            sys.path.append("/software/scripts/enzyme_design/utils")
+            sys.path.append(repo_paths.ENZYME_DESIGN_UTILS)
             import design_utils
             catres = design_utils.get_matcher_residues(pyr.pose_from_file(pdbfile))
             catalytic_positions = list(catres.keys())

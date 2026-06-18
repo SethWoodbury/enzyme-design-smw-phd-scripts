@@ -19,13 +19,21 @@ import os
 import argparse
 import subprocess
 
+# --- locate repo root + shared external paths ---
+import sys as _sys
+from pathlib import Path as _Path
+for _anc in _Path(__file__).resolve().parents:
+    if (_anc / "repo_paths.py").is_file():
+        _sys.path.insert(0, str(_anc)); break
+import repo_paths
+
 def main(lig_code, input_mol2):
     """
     Execute the Rosetta 'molfile_to_params.py' script with the user-provided arguments.
     Then merge {lig_code}.pdb on top of {lig_code}_conformers.pdb.
     """
     # Path to the 'molfile_to_params.py' script - adjust if needed
-    molfile_to_params_script = "/software/rosetta/main/source/scripts/python/public/molfile_to_params.py"
+    molfile_to_params_script = repo_paths.MOLFILE_TO_PARAMS
     
     # 1) Build the command
     cmd = [

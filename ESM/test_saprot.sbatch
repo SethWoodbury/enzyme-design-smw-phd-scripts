@@ -5,14 +5,16 @@
 #SBATCH --cpus-per-task=2
 #SBATCH --mem=24G
 #SBATCH --time=00:30:00
-#SBATCH --output=/home/woodbuse/special_scripts/ESM/test_saprot.%j.out
-#SBATCH --error=/home/woodbuse/special_scripts/ESM/test_saprot.%j.err
+#SBATCH --output=test_saprot.%j.out
+#SBATCH --error=test_saprot.%j.err
 
 set -euo pipefail
 
-SIF=/net/software/containers/users/woodbuse/esmc.sif
-SCRIPT=/home/woodbuse/special_scripts/ESM/test_saprot.py
-HF=/net/databases/huggingface/saprot
+ESMC_SIF="${ESMC_SIF:-/net/software/containers/users/woodbuse/esmc.sif}"
+HUGGINGFACE="${HUGGINGFACE:-/net/databases/huggingface}"
+SIF="$ESMC_SIF"
+SCRIPT="${SLURM_SUBMIT_DIR:-$(pwd)}/test_saprot.py"
+HF="$HUGGINGFACE/saprot"
 
 echo "host: $(hostname), gpu: $CUDA_VISIBLE_DEVICES"
 nvidia-smi -L

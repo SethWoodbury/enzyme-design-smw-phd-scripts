@@ -18,6 +18,14 @@ from SimplePdbLib import *
 from concurrent.futures import ThreadPoolExecutor
 import re
 
+# --- locate repo root + shared external paths ---
+import sys as _sys
+from pathlib import Path as _Path
+for _anc in _Path(__file__).resolve().parents:
+    if (_anc / "repo_paths.py").is_file():
+        _sys.path.insert(0, str(_anc)); break
+import repo_paths
+
 parser = OptionParser(usage="usage: %prog [options] FILE", version="0.1")
 parser.add_option("--pdb", type="string", dest="pdb", help="Path to pdb you want to filter")
 parser.add_option("--key_atoms", type="string", dest="key_atoms", help="check these atoms for hydrogen bonds")
@@ -33,7 +41,7 @@ print(opts)
 params_files = glob.glob(os.path.join(opts.params_dir, '*.params'))  # Note the comma between dir and pattern
 
 # Initialize PyRosetta
-pyrosetta.init(f"-mute all -beta -in:file:extra_res_fa {' '.join(params_files)} -dalphaball /net/software/lab/scripts/enzyme_design/DAlphaBall.gcc -mute all")
+pyrosetta.init(f"-mute all -beta -in:file:extra_res_fa {' '.join(params_files)} -dalphaball {repo_paths.DALPHABALL} -mute all")
 
 
 bn = os.path.basename(opts.pdb)

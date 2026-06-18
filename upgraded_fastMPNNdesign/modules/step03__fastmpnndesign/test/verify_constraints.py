@@ -12,18 +12,29 @@ import sys
 import os
 import json
 import tempfile
+from pathlib import Path
+
+_HERE = Path(__file__).resolve().parent
+
+# --- locate repo root + shared external paths ---
+import sys as _sys
+from pathlib import Path as _Path
+for _anc in _Path(__file__).resolve().parents:
+    if (_anc / "repo_paths.py").is_file():
+        _sys.path.insert(0, str(_anc)); break
+import repo_paths
 
 # Add project root to path
-PROJECT_ROOT = "/home/woodbuse/special_scripts/upgraded_fastMPNNdesign"
+PROJECT_ROOT = str(_HERE.parents[2])
 sys.path.insert(0, PROJECT_ROOT)
 
 from modules.step03__fastmpnndesign.fastmpnn_design import FastMPNNDesigner
 from modules.step03__fastmpnndesign.rosetta_relax import add_coordinate_constraints
 
 # Paths
-STEP02_JSON = "/home/woodbuse/special_scripts/upgraded_fastMPNNdesign/modules/step02__constrained_cart_relax/test/output_dir/input_pdb_aligned_relaxed_metrics.json"
-STEP02_PDB = "/home/woodbuse/special_scripts/upgraded_fastMPNNdesign/modules/step02__constrained_cart_relax/test/output_dir/input_pdb_aligned_relaxed.pdb"
-PARAMS = "/home/woodbuse/special_scripts/upgraded_fastMPNNdesign/modules/step03__fastmpnndesign/test/params/XDW.params"
+STEP02_JSON = str(_HERE.parents[1] / "step02__constrained_cart_relax/test/output_dir/input_pdb_aligned_relaxed_metrics.json")
+STEP02_PDB = str(_HERE.parents[1] / "step02__constrained_cart_relax/test/output_dir/input_pdb_aligned_relaxed.pdb")
+PARAMS = str(_HERE / "params/XDW.params")
 
 
 def test_constraint_loading():
@@ -325,7 +336,7 @@ if ligand_key:
     # Run in universal container (has PyRosetta 2026.03)
     cmd = [
         "apptainer", "exec",
-        "/net/software/containers/universal.sif",
+        repo_paths.UNIVERSAL_SIF,
         "python", script_path
     ]
 

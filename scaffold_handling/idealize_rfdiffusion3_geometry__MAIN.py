@@ -68,6 +68,14 @@ from collections import defaultdict
 import time
 from datetime import datetime
 
+# --- locate repo root + shared external paths ---
+import sys as _sys
+from pathlib import Path as _Path
+for _anc in _Path(__file__).resolve().parents:
+    if (_anc / "repo_paths.py").is_file():
+        _sys.path.insert(0, str(_anc)); break
+import repo_paths
+
 
 # ---------------------------------------------------------------------------
 # Module-level caches
@@ -824,12 +832,11 @@ class RFDiffusion3GeometryIdealizer:
         info = {'requested_designs': self.mpnn_num_designs,
                 'temperature': self.mpnn_temperature,
                 'omit_aa': self.mpnn_omit_aa}
-        # The FastMPNNDesign library lives in different places on the host
-        # filesystem vs inside the container (/net/software/... is bind-mounted
-        # in the container while /software/... is only on the bare host).
+        # The FastMPNNDesign library may live under the lab scripts tree or the
+        # general enzyme_design scripts tree; try both.
         _candidate_roots = [
-            "/net/software/lab/scripts/enzyme_design",  # inside the sif
-            "/software/scripts/enzyme_design",            # bare host
+            repo_paths.LAB_SCRIPTS,            # /net/software/lab/scripts/enzyme_design
+            repo_paths.ENZYME_DESIGN_DIR,      # /net/software/scripts/enzyme_design
         ]
         _FMD = None
         _design_utils = None

@@ -31,7 +31,10 @@ import subprocess
 import sys
 import shlex
 
-STEP1_LIGAND_SCRIPT = "/home/woodbuse/special_scripts/design_filtering/protein_size_shape_metrics__STEP1_ligand_metrics.py"
+from pathlib import Path
+_HERE = Path(__file__).resolve().parent
+
+STEP1_LIGAND_SCRIPT = str(_HERE / "protein_size_shape_metrics__STEP1_ligand_metrics.py")
 
 
 def parse_pdb_ca(pdb_path):

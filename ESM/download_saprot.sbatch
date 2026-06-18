@@ -4,16 +4,18 @@
 #SBATCH --cpus-per-task=2
 #SBATCH --mem=8G
 #SBATCH --time=01:00:00
-#SBATCH --output=/home/woodbuse/special_scripts/ESM/download_saprot.%j.out
-#SBATCH --error=/home/woodbuse/special_scripts/ESM/download_saprot.%j.err
+#SBATCH --output=download_saprot.%j.out
+#SBATCH --error=download_saprot.%j.err
 
 set -euo pipefail
 
-SIF=/net/software/containers/users/woodbuse/esmc.sif
-SCRIPT=/home/woodbuse/special_scripts/ESM/download_saprot.py
+ESMC_SIF="${ESMC_SIF:-/net/software/containers/users/woodbuse/esmc.sif}"
+HUGGINGFACE="${HUGGINGFACE:-/net/databases/huggingface}"
+SIF="$ESMC_SIF"
+SCRIPT="${SLURM_SUBMIT_DIR:-$(pwd)}/download_saprot.py"
 
 apptainer exec \
     --env HF_HUB_ENABLE_HF_TRANSFER=0 \
     "$SIF" python "$SCRIPT"
 
-du -sh /net/databases/huggingface/saprot/hub/* || true
+du -sh "$HUGGINGFACE"/saprot/hub/* || true

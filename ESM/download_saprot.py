@@ -11,7 +11,15 @@ import sys
 
 from huggingface_hub import snapshot_download
 
-CACHE = "/net/databases/huggingface/saprot"
+# --- locate repo root + shared external paths ---
+import sys as _sys
+from pathlib import Path as _Path
+for _anc in _Path(__file__).resolve().parents:
+    if (_anc / "repo_paths.py").is_file():
+        _sys.path.insert(0, str(_anc)); break
+import repo_paths
+
+CACHE = f"{repo_paths.HUGGINGFACE}/saprot"
 os.environ["HF_HOME"] = CACHE
 os.environ["HF_HUB_CACHE"] = f"{CACHE}/hub"
 

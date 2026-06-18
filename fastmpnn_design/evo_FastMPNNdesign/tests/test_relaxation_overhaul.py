@@ -31,6 +31,15 @@ import subprocess
 # Add package to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+_HERE = Path(__file__).resolve().parent
+# --- locate repo root + shared external paths ---
+import sys as _sys
+from pathlib import Path as _Path
+for _anc in _Path(__file__).resolve().parents:
+    if (_anc / "repo_paths.py").is_file():
+        _sys.path.insert(0, str(_anc)); break
+import repo_paths
+
 from fastmpnndesign.config import RelaxConfig, ConstraintConfig
 from fastmpnndesign.remark666 import parse_remark666
 from fastmpnndesign.ligand import detect_ligands_from_pdb, detect_metals_from_pdb
@@ -235,8 +244,8 @@ def run_single_relax_test(
 
     # Build CLI command
     cmd = [
-        "apptainer", "exec", "/software/containers/universal.sif",
-        "python", "/home/woodbuse/special_scripts/fastmpnn_design/evo_FastMPNNdesign/fastmpnndesign/cli.py",
+        "apptainer", "exec", repo_paths.UNIVERSAL_SIF,
+        "python", str(_HERE.parents[0] / "fastmpnndesign" / "cli.py"),
         "--pdb", str(input_pdb),
         "--output_dir", str(test_output_dir),
         "--prefix", config.name,

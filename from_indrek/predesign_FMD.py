@@ -19,10 +19,18 @@ HOME = ""
 if not os.path.exists("/home/ikalvet"):
     HOME = "/home/indrek/UW_Digs"
 
-sys.path.append("/software/scripts/enzyme_design/FastMPNNDesign")
+# --- locate repo root + shared external paths ---
+import sys as _sys
+from pathlib import Path as _Path
+for _anc in _Path(__file__).resolve().parents:
+    if (_anc / "repo_paths.py").is_file():
+        _sys.path.insert(0, str(_anc)); break
+import repo_paths
+
+sys.path.append(repo_paths.ENZYME_DESIGN_FASTMPNN)
 import FastMPNNdesign
 from Selectors import SelectHBondsToResidue
-sys.path.append("/software/scripts/enzyme_design/utils")
+sys.path.append(repo_paths.ENZYME_DESIGN_UTILS)
 import design_utils
 import scoring_utils
 
@@ -98,7 +106,7 @@ if "SLURM_CPUS_ON_NODE" in os.environ:
     NPROC = os.environ["SLURM_CPUS_ON_NODE"]
 
 
-DAB = f"/net/software/lab/scripts/enzyme_design/DAlphaBall.gcc"
+DAB = repo_paths.DALPHABALL
 pyr.init(f"{extra_res_fa} -dalphaball {DAB} -beta_nov16 -run:preserve_header "
          f"-multithreading true -multithreading:total_threads {NPROC} -multithreading:interaction_graph_threads {NPROC}")
 

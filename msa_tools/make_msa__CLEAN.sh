@@ -69,7 +69,8 @@ MEM="$4"           # MB      -> hhblits -maxmem
 
 # -------- Environment / PATH ----------------------------------------------------
 # If HHsuite is not already in PATH, set HHLIB here:
-HHLIB_DEFAULT="/software/hhsuite/build/bin"
+HHSUITE="${HHSUITE:-/net/software/hhsuite}"
+HHLIB_DEFAULT="$HHSUITE/build/bin"
 if ! command -v hhblits >/dev/null 2>&1; then
   if [[ -x "$HHLIB_DEFAULT/hhblits" ]]; then
     export PATH="$HHLIB_DEFAULT:$PATH"

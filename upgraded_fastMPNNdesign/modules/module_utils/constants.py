@@ -10,12 +10,20 @@ This module provides default values for:
 import logging
 from typing import List, Set
 
+# --- locate repo root + shared external paths ---
+import sys as _sys
+from pathlib import Path as _Path
+for _anc in _Path(__file__).resolve().parents:
+    if (_anc / "repo_paths.py").is_file():
+        _sys.path.insert(0, str(_anc)); break
+import repo_paths
+
 LOGGER = logging.getLogger(__name__)
 
 # =============================================================================
 # MPNN Defaults
 # =============================================================================
-DEFAULT_MPNN_RUNNER: str = "/net/software/lab/fused_mpnn/seth_temp/run.py"
+DEFAULT_MPNN_RUNNER: str = repo_paths.FUSED_MPNN_RUN
 DEFAULT_MODEL_TYPE: str = "ligand_mpnn"
 DEFAULT_ENHANCE_MODEL: str = "plddt_3_20240930-f9c9ea0f"
 DEFAULT_OMIT_AA: str = "CM"  # Omit Cysteine and Methionine
@@ -24,14 +32,14 @@ DEFAULT_OMIT_AA: str = "CM"  # Omit Cysteine and Methionine
 # universal.sif contains both PyRosetta (2026.03) and ProteinMPNN
 # It has beta_jan25 scorefunction, multi-threading, and serialization support
 # Using a single container for everything simplifies execution
-DEFAULT_APPTAINER_IMAGE: str = "/net/software/containers/universal.sif"
-DEFAULT_PYROSETTA_IMAGE: str = "/net/software/containers/universal.sif"  # Now uses universal.sif by default
+DEFAULT_APPTAINER_IMAGE: str = repo_paths.UNIVERSAL_SIF
+DEFAULT_PYROSETTA_IMAGE: str = repo_paths.UNIVERSAL_SIF  # Now uses universal.sif by default
 DEFAULT_PYROSETTA_FALLBACK_PATHS: List[str] = [
-    "/software/pyrosetta/latest",
-    "/software/pyrosetta/latest/setup",
-    "/software/pyrosetta/latest/setup/pyrosetta",
+    repo_paths.PYROSETTA,
+    f"{repo_paths.PYROSETTA}/setup",
+    f"{repo_paths.PYROSETTA}/setup/pyrosetta",
 ]
-DEFAULT_PYROSETTA_DIR: str = "/software/pyrosetta/latest"
+DEFAULT_PYROSETTA_DIR: str = repo_paths.PYROSETTA
 DEFAULT_PYROSETTA_REQUIRED_VERSION: str = ""
 DEFAULT_PYROSETTA_MIN_VERSION: str = ""
 

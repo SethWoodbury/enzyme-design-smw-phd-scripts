@@ -19,12 +19,20 @@ import time
 import types
 from concurrent.futures import ThreadPoolExecutor
 
+# --- locate repo root + shared external paths ---
+import sys as _sys
+from pathlib import Path as _Path
+for _anc in _Path(__file__).resolve().parents:
+    if (_anc / "repo_paths.py").is_file():
+        _sys.path.insert(0, str(_anc)); break
+import repo_paths
+
 # ============================================================================
 # Constants
 # ============================================================================
 
-MPNN_PATH = "/net/software/lab/fused_mpnn/seth_temp"
-DEFAULT_CHECKPOINT = "/projects/ml/struc2seq/ligandMPNN_models/b_v1/s_300756.pt"
+MPNN_PATH = str(_Path(repo_paths.FUSED_MPNN_RUN).parent)
+DEFAULT_CHECKPOINT = f"{repo_paths.SOLUBLE_MPNN_MODELS}/ligandMPNN_models/b_v1/s_300756.pt"
 
 RESTYPE_STR_TO_INT = {
     'A': 0, 'C': 1, 'D': 2, 'E': 3, 'F': 4, 'G': 5, 'H': 6, 'I': 7,

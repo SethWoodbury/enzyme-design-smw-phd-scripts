@@ -8,6 +8,14 @@ __license__ = 'BSD-2-Clause'
 
 from pymol import cmd, CmdException
 
+# --- locate repo root + shared external paths ---
+import sys as _sys
+from pathlib import Path as _Path
+for _anc in _Path(__file__).resolve().parents:
+    if (_anc / "repo_paths.py").is_file():
+        _sys.path.insert(0, str(_anc)); break
+import repo_paths
+
 def save_pdb_without_ter(filename, selection, **kwargs):
 	'''
 DESCRIPTION
@@ -57,7 +65,7 @@ ARGUMENTS
 		else:
 			myalign(method)
 
-def tmalign(mobile, target, args='', exe='/software/utils/TMalign', ter=0, transform=1, object=None, quiet=0):
+def tmalign(mobile, target, args='', exe=repo_paths.TMALIGN, ter=0, transform=1, object=None, quiet=0):
 	'''
 DESCRIPTION
 

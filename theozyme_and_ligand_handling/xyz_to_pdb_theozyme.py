@@ -101,6 +101,16 @@ import string
 import glob
 import shutil
 import sys
+from pathlib import Path
+_HERE = Path(__file__).resolve().parent
+
+# --- locate repo root + shared external paths ---
+import sys as _sys
+from pathlib import Path as _Path
+for _anc in _Path(__file__).resolve().parents:
+    if (_anc / "repo_paths.py").is_file():
+        _sys.path.insert(0, str(_anc)); break
+import repo_paths
 
 
 # Define the main function
@@ -114,7 +124,7 @@ def main(input_xyz, ligand_atom_ranges, lig_3letter_code, ligand_chain, tip_atom
     
     # Convert residue XYZ to PDB using Open Babel
     residue_pdb_file = temp_residue_xyz_file.replace("TEMP.xyz", "residues_TEMP.pdb")
-    obabel_path = "/home/woodbuse/conda_envs/openbabel_env/bin/obabel"
+    obabel_path = repo_paths.OBABEL
     #os.system(f"{obabel_path} -ixyz {temp_residue_xyz_file} -opdb -O {residue_pdb_file}") ## OLD ##
     
     ### NEW DEBUG SECTION ###########################################################################
@@ -179,16 +189,16 @@ def main(input_xyz, ligand_atom_ranges, lig_3letter_code, ligand_chain, tip_atom
     print(f"  Ligand only (updated): {ligand_pdb_file}")
 
     # Call the side script to renumber residues
-    os.system(f"/software/containers/crispy.sif /home/woodbuse/special_scripts/theozyme_and_ligand_handling/renumber_pdb.py -input_pdb {residue_pdb_file}")
+    os.system(f"{repo_paths.CRISPY_SIF} {_HERE / 'renumber_pdb.py'} -input_pdb {residue_pdb_file}")
 
     print("PASSED RESIDUE RENUMBERING")
     print("")
 
     # Call the side script to identify residues with the -tip_atom_residues_3letter argument if the flag is set
     if DO_NOT_pass_tip_atom_residues_3letter_to_help_identifier:
-        os.system(f"/software/containers/crispy.sif /home/woodbuse/special_scripts/theozyme_and_ligand_handling/identify_residues.py -input_pdb {residue_pdb_file} -tip_atom_residues_3letter {' '.join(tip_atom_residues_3letter)}")
+        os.system(f"{repo_paths.CRISPY_SIF} {_HERE / 'identify_residues.py'} -input_pdb {residue_pdb_file} -tip_atom_residues_3letter {' '.join(tip_atom_residues_3letter)}")
     else:
-        os.system(f"/software/containers/crispy.sif /home/woodbuse/special_scripts/theozyme_and_ligand_handling/identify_residues.py -input_pdb {residue_pdb_file}")
+        os.system(f"{repo_paths.CRISPY_SIF} {_HERE / 'identify_residues.py'} -input_pdb {residue_pdb_file}")
 
     print("PASSED RESIDUE IDENTIFICATION")
     print("")
@@ -230,7 +240,7 @@ def main(input_xyz, ligand_atom_ranges, lig_3letter_code, ligand_chain, tip_atom
     if not make_params_or_mol2_files:
         # Define the path to the new script and the ligand PDB file to be processed
         ligand_temp_pdb_file = f"{ligand_pdb_file}"
-        params_script_path = "/home/woodbuse/special_scripts/theozyme_and_ligand_handling/make_params_file.py"
+        params_script_path = str(_HERE / "make_params_file.py")
 
         # Call the make_params_file.py script to create a .mol2 file from the ligand PDB
         os.system(f"python {params_script_path} -input_pdb {ligand_temp_pdb_file} -ligand_code {lig_3letter_code}")
@@ -265,7 +275,7 @@ def main(input_xyz, ligand_atom_ranges, lig_3letter_code, ligand_chain, tip_atom
     # Call the script to extract the residues from the residues_TEMP
     # Then build the corresponding rosetta pdbs (e.g., build a full his for histidine)
     # Then partial dock/align them
-    build_residue_script = "/software/containers/crispy.sif /home/woodbuse/special_scripts/theozyme_and_ligand_handling/build_full_residue_from_tips.py"
+    build_residue_script = f"{repo_paths.CRISPY_SIF} {_HERE / 'build_full_residue_from_tips.py'}"
     os.system(f"{build_residue_script} -input_pdb {residue_pdb_file}")
     print("\n### BUILT ROSETTA RESIDUE FILES FOR ALIGNMENT WITH THE CORRESPONDING TIPS ###\n")
 
@@ -294,7 +304,7 @@ def main(input_xyz, ligand_atom_ranges, lig_3letter_code, ligand_chain, tip_atom
     ###################################### IMPORTANT NOTE ######################################
     # added --omit_backbone_but_keep_CA !! this prevents backbones from being part of the matching process
     # Execute the command for each pair
-    build_script = "/net/software/containers/crispy.sif /home/woodbuse/special_scripts/theozyme_and_ligand_handling/build_full_residue_from_tips_OPTIMAL_SUPERIMPOSE_donghyo.py"
+    build_script = f"{repo_paths.CRISPY_SIF} {_HERE / 'build_full_residue_from_tips_OPTIMAL_SUPERIMPOSE_donghyo.py'}"
     for input_file, rosetta_file in pairs:
         command = f"{build_script} -i {input_file} -r {rosetta_file} -o aligned_rosetta.pdb --omit_backbone_but_keep_CA" # OR YOU CAN DO --omit_all_backbone
         os.system(command)
@@ -322,7 +332,7 @@ def main(input_xyz, ligand_atom_ranges, lig_3letter_code, ligand_chain, tip_atom
         print(f"Rosetta: {rosetta_file}, Aligned: {aligned_file}")
 
     # Execute the command for each pair
-    correct_residue_script = "/home/woodbuse/special_scripts/theozyme_and_ligand_handling/build_full_residue_from_tips_CORRECT_RESIDUE_CHAIN_AND_NUMBER.py"
+    correct_residue_script = str(_HERE / "build_full_residue_from_tips_CORRECT_RESIDUE_CHAIN_AND_NUMBER.py")
     for rosetta_file, aligned_file in aligned_pairs:
         command = f"python {correct_residue_script} -input_rosetta_residue {rosetta_file} -input_tip_atom_aligned_rosetta_residue {aligned_file}"
         os.system(command)
@@ -340,7 +350,7 @@ def main(input_xyz, ligand_atom_ranges, lig_3letter_code, ligand_chain, tip_atom
         print(aligned_file)
 
     # Construct the command to install missing atoms
-    install_missing_atoms_script = "/home/woodbuse/special_scripts/theozyme_and_ligand_handling/build_full_residue_from_tips_PART1_INSTALL_MISSING_ATOMS.py"
+    install_missing_atoms_script = str(_HERE / "build_full_residue_from_tips_PART1_INSTALL_MISSING_ATOMS.py")
     output_pdb = "single_file_aligned_rosetta_pdb_residues_TEMP.pdb"
     aligned_files_argument = " ".join(aligned_rosetta_files)
     command = f"python {install_missing_atoms_script} -aligned_rosetta_pdbs_for_residues {aligned_files_argument} -output_pdb {output_pdb}"
@@ -351,7 +361,7 @@ def main(input_xyz, ligand_atom_ranges, lig_3letter_code, ligand_chain, tip_atom
     print(f"Output PDB: {output_pdb}")
 
     # Define the script path and fixed filenames
-    part2_script = "/home/woodbuse/special_scripts/theozyme_and_ligand_handling/build_full_residue_from_tips_PART2_INSTALL_MISSING_ATOMS.py"
+    part2_script = str(_HERE / "build_full_residue_from_tips_PART2_INSTALL_MISSING_ATOMS.py")
     aligned_rosetta_single_pdb = "single_file_aligned_rosetta_pdb_residues_TEMP.pdb"
     semi_final_output_pdb = "SEMI_FINAL_RESIDUE_CONSTRUCTION_TEMP.pdb"
 
@@ -364,7 +374,7 @@ def main(input_xyz, ligand_atom_ranges, lig_3letter_code, ligand_chain, tip_atom
     print(f"Output PDB: {semi_final_output_pdb}")
 
     # Define the script path and filenames for PART3
-    part3_script = "/home/woodbuse/special_scripts/theozyme_and_ligand_handling/build_full_residue_from_tips_PART3_INSTALL_MISSING_ATOMS.py"
+    part3_script = str(_HERE / "build_full_residue_from_tips_PART3_INSTALL_MISSING_ATOMS.py")
     semi_final_pdb = "SEMI_FINAL_RESIDUE_CONSTRUCTION_TEMP.pdb"
     final_output_pdb = "final_residue_construction.pdb"
 
@@ -380,7 +390,7 @@ def main(input_xyz, ligand_atom_ranges, lig_3letter_code, ligand_chain, tip_atom
     print(f"\n### COPIED: {ligand_pdb_file} to {new_ligand_pdb} ###")
 
     # Define the script path for combining residues and ligand PDBs
-    combine_script = "/home/woodbuse/special_scripts/theozyme_and_ligand_handling/combine_residuesPDB_w_ligandPDB.py"
+    combine_script = str(_HERE / "combine_residuesPDB_w_ligandPDB.py")
     residues_pdb = "final_residue_construction.pdb"
 
     # Construct the output filename based on the input XYZ file
@@ -405,7 +415,7 @@ def main(input_xyz, ligand_atom_ranges, lig_3letter_code, ligand_chain, tip_atom
     ### NEW CODE SECTION FOR OPTIONALLY STANDARDIZING OE2/OE1 & OD2/OD1 FOR EVERY GLU/ASP RESIDUE ###
     # If user provided a ligand atom for close proximity standardization
     if ligand_atom_for_close_proximity_to_OE2glu_and_OD2asp:
-        standardize_script = "/home/woodbuse/special_scripts/theozyme_and_ligand_handling/standardize_GLU_ASP_tip_atom_labeling_based_on_proximity_to_atomOFinterest.py"
+        standardize_script = str(_HERE / "standardize_GLU_ASP_tip_atom_labeling_based_on_proximity_to_atomOFinterest.py")
         command = (
             f"python {standardize_script} "
             f"--input_pdb {output_pdb} "

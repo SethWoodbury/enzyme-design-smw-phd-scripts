@@ -10,6 +10,8 @@ import sys
 import time
 from pathlib import Path
 
+_HERE = Path(__file__).resolve().parent
+
 # Local helper (sibling of this file)
 sys.path.insert(0, str(Path(__file__).parent))
 from saprot_utils import sa_tokens_from_pdb  # noqa: E402
@@ -18,7 +20,7 @@ import torch  # noqa: E402
 from transformers import AutoTokenizer, EsmForMaskedLM  # noqa: E402
 
 
-PDB = "/home/woodbuse/special_scripts/ESM/test_pte.pdb"
+PDB = str(_HERE / "test_pte.pdb")
 MODELS = [
     "westlake-repl/SaProt_35M_AF2",
     "westlake-repl/SaProt_650M_PDB",

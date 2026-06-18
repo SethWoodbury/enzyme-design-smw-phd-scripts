@@ -26,6 +26,14 @@ import re
 import csv
 from collections import OrderedDict
 
+# --- locate repo root + shared external paths ---
+import sys as _sys
+from pathlib import Path as _Path
+for _anc in _Path(__file__).resolve().parents:
+    if (_anc / "repo_paths.py").is_file():
+        _sys.path.insert(0, str(_anc)); break
+import repo_paths
+
 # ============================================================================
 # Constants
 # ============================================================================
@@ -840,7 +848,7 @@ def print_ordering_instructions(output_mode, n_sequences, max_len, fasta_path=No
     print()
 
 
-VECTOR_FASTA_DIR = "/software/lab/johnbercow/entry_vectors/"
+VECTOR_FASTA_DIR = "/net/software/lab/johnbercow/entry_vectors/"
 
 # Map vector names to their FASTA filenames on disk
 VECTOR_FASTA_FILES = {
@@ -1313,12 +1321,12 @@ Examples:
                         help='Forward primer for WT G-blocks (default: oopzs016)')
     parser.add_argument('--gblock_rv_primer', default='AATGCAAAGCTATTAGCGCG',
                         help='Reverse primer for WT G-blocks (default: oopzs018)')
-    parser.add_argument('--oopzs_csv', default='/net/shared/IPDblocks/files/oopzs_primers_rev_comp.csv',
+    parser.add_argument('--oopzs_csv', default=f'{repo_paths.IPD_BLOCKS}/files/oopzs_primers_rev_comp.csv',
                         help='Path to oopzs primers CSV (for default chip primer assignment)')
 
     # Fidelity
     parser.add_argument('--fidelity_csv',
-                        default='/net/shared/IPDblocks/files/b4-BsaI-HFv2-37_16_cycling.table-overhang_matrix.csv',
+                        default=f'{repo_paths.IPD_BLOCKS}/files/b4-BsaI-HFv2-37_16_cycling.table-overhang_matrix.csv',
                         help='Path to BsaI fidelity matrix CSV')
 
     args = parser.parse_args()

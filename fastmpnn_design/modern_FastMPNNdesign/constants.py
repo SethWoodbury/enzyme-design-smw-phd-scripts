@@ -6,15 +6,23 @@ Constants and default values for Enhanced FastMPNN Design.
 This module centralizes all configurable defaults and paths.
 """
 
+# --- locate repo root + shared external paths ---
+import sys as _sys
+from pathlib import Path as _Path
+for _anc in _Path(__file__).resolve().parents:
+    if (_anc / "repo_paths.py").is_file():
+        _sys.path.insert(0, str(_anc)); break
+import repo_paths
+
 # =============================================================================
 # MPNN Defaults
 # =============================================================================
 
-DEFAULT_MPNN_RUNNER: str = "/net/software/lab/fused_mpnn/seth_temp/run.py"
+DEFAULT_MPNN_RUNNER: str = repo_paths.FUSED_MPNN_RUN
 DEFAULT_MODEL_TYPE: str = "ligand_mpnn"
 DEFAULT_ENHANCE_MODEL: str = "plddt_3_20240930-f9c9ea0f"
 DEFAULT_OMIT_AA: str = "CM"  # Omit Cysteine and Methionine
-DEFAULT_APPTAINER_IMAGE: str = "/software/containers/universal.sif"
+DEFAULT_APPTAINER_IMAGE: str = repo_paths.UNIVERSAL_SIF
 
 # MPNN Side-Chain and Repacking Settings
 DEFAULT_LIGAND_MPNN_USE_SC_CONTEXT: int = 1  # Use side-chain context for ligand MPNN
@@ -30,7 +38,7 @@ DEFAULT_MPNN_SERVER_HOST: str = "localhost"
 # PyRosetta Defaults
 # =============================================================================
 
-DEFAULT_DALPHABALL: str = "/net/software/lab/scripts/enzyme_design/DAlphaBall.gcc"
+DEFAULT_DALPHABALL: str = repo_paths.DALPHABALL
 DEFAULT_PARAMS: list = ["/home/ikalvet/projects/Organophosphate/Esterase/theozyme/ZRE/ZRE.params"]
 
 # =============================================================================
@@ -104,7 +112,7 @@ DEFAULT_INIT_CORRECTION: str = "-beta_nov16"
 BETA_SCOREFUNCTIONS_REQUIRE_CONTAINER: set = {"beta_jan25"}
 
 # PyRosetta container for newer scorefunctions
-DEFAULT_PYROSETTA_IMAGE: str = "/software/containers/pyrosetta.sif"
+DEFAULT_PYROSETTA_IMAGE: str = repo_paths.PYROSETTA_SIF
 
 # Environment variable set when running inside a container (for detection)
 CONTAINER_ENV_VAR: str = "FASTMPNN_IN_CONTAINER"

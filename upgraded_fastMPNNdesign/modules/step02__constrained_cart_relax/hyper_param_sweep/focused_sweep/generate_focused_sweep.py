@@ -11,9 +11,20 @@ Based on initial sweep findings:
 """
 
 import os
+from pathlib import Path
+
+_HERE = Path(__file__).resolve().parent
+
+# --- locate repo root + shared external paths ---
+import sys as _sys
+from pathlib import Path as _Path
+for _anc in _Path(__file__).resolve().parents:
+    if (_anc / "repo_paths.py").is_file():
+        _sys.path.insert(0, str(_anc)); break
+import repo_paths
 
 # Paths
-SCRIPT_DIR = "/home/woodbuse/special_scripts/upgraded_fastMPNNdesign/modules/step02__constrained_cart_relax"
+SCRIPT_DIR = str(_HERE.parents[1])
 SWEEP_DIR = f"{SCRIPT_DIR}/hyper_param_sweep/focused_sweep"
 STEP01_JSON = f"{SCRIPT_DIR}/test/step01_outputs/input_pdb_recommended_atom_cst.json"
 PARAMS = f"{SCRIPT_DIR}/test/params/XDW.params"
@@ -47,7 +58,7 @@ for cart_weight in CART_BONDED_WEIGHTS:
                 out_dir = f"{OUTPUT_BASE}/{out_name}"
 
                 cmd_parts = [
-                    f"apptainer exec /net/software/containers/universal.sif python {SCRIPT_DIR}/constrained_cart_relax.py",
+                    f"apptainer exec {repo_paths.UNIVERSAL_SIF} python {SCRIPT_DIR}/constrained_cart_relax.py",
                     f"--step01_json {STEP01_JSON}",
                     f"--params {PARAMS}",
                     f"--scorefunction {SCOREFUNCTION}",

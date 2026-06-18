@@ -132,6 +132,7 @@ import subprocess
 import argparse
 import re
 from pathlib import Path
+_HERE = Path(__file__).resolve().parent
 
 # Predefined atom_name→atom_type mappings by three-letter residue code
 ### NOTE: YOU MAY NEED TO EXPAND THIS DICTIONARY I DID NOT MAKE EVERY POSSIBLE MAPPING YET...
@@ -236,7 +237,7 @@ def main():
     p.add_argument('--input_pdb',  required=True, help="Input PDB file")
     p.add_argument('--output_cst', required=True, help="Output CST file")
     p.add_argument('--specs', required=True, help="Inline JSON string of specs (must start with '[' or '{'), or path to a JSON file")
-    p.add_argument('--script_path_cst_generator', default="/home/woodbuse/special_scripts/theozyme_and_ligand_handling/make_cst_file_from_pdb__STEP1__build_CST_file.py", help="Path to the CST-generator script")
+    p.add_argument('--script_path_cst_generator', default=str(_HERE / "make_cst_file_from_pdb__STEP1__build_CST_file.py"), help="Path to the CST-generator script")
     p.add_argument('--keep_multiple_atom_types', action='store_true', help="If set, keep all mapped atom_types; otherwise only the first one is used... I DON'T THINK THIS SHOULD EVER BE USED")    
     p.add_argument('--verbose', action='store_true', help="Enable verbose logging in CST script")
     args = p.parse_args()

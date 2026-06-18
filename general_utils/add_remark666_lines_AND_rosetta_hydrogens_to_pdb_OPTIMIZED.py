@@ -55,6 +55,14 @@ import shutil
 import numpy as np
 from datetime import timedelta
 
+# --- locate repo root + shared external paths ---
+import sys as _sys
+from pathlib import Path as _Path
+for _anc in _Path(__file__).resolve().parents:
+    if (_anc / "repo_paths.py").is_file():
+        _sys.path.insert(0, str(_anc)); break
+import repo_paths
+
 try:
     import pyrosetta
     import pyrosetta.rosetta
@@ -65,7 +73,7 @@ except ImportError:
 
 # Try to import design_utils
 try:
-    sys.path.append("/net/software/scripts/enzyme_design/utils")
+    sys.path.append(repo_paths.ENZYME_DESIGN_UTILS)
     import design_utils
     HAS_DESIGN_UTILS = True
 except ImportError:

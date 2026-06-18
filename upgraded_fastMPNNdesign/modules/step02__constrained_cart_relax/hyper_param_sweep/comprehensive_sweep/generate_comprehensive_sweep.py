@@ -22,6 +22,14 @@ import os
 import itertools
 from pathlib import Path
 
+# --- locate repo root + shared external paths ---
+import sys as _sys
+from pathlib import Path as _Path
+for _anc in _Path(__file__).resolve().parents:
+    if (_anc / "repo_paths.py").is_file():
+        _sys.path.insert(0, str(_anc)); break
+import repo_paths
+
 # Paths
 SCRIPT_DIR = Path(__file__).parent
 MODULE_DIR = SCRIPT_DIR.parent.parent
@@ -93,7 +101,7 @@ def generate_job_id(params: dict, replicate: int) -> str:
 
 
 # Apptainer container for PyRosetta (universal.sif has newer PyRosetta 2026.03 with threading support)
-APPTAINER_CMD = "apptainer exec /net/software/containers/universal.sif python"
+APPTAINER_CMD = f"apptainer exec {repo_paths.UNIVERSAL_SIF} python"
 
 # Params file for ligand
 PARAMS_FILE = MODULE_DIR / "test" / "params" / "XDW.params"

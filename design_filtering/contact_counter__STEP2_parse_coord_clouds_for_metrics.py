@@ -62,7 +62,7 @@ Ensure you have already run STEP1 with `--return_HETATM_coordinates_from_cutoffs
 - Always inspect a few `__CONTACTcutoff_*A.pdb` clouds visually to confirm that STEP1 outputs are correct before running STEP2.
 
 Usage:
-    /software/containers/crispy.sif contact_counter__STEP2_parse_coord_clouds_for_metrics.py file1.pdb [file2.pdb ...]
+    /net/software/containers/crispy.sif contact_counter__STEP2_parse_coord_clouds_for_metrics.py file1.pdb [file2.pdb ...]
 
 Dependencies:
     numpy, pandas, scipy, sklearn, sklearn.cluster

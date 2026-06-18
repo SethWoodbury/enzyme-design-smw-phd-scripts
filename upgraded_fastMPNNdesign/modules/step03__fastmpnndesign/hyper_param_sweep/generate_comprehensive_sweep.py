@@ -36,10 +36,13 @@ import sys
 import json
 import argparse
 from itertools import product
+from pathlib import Path
 from typing import List, Dict, Tuple
 
+_HERE = Path(__file__).resolve().parent
+
 # Paths
-PROJECT_ROOT = "/home/woodbuse/special_scripts/upgraded_fastMPNNdesign"
+PROJECT_ROOT = str(_HERE.parents[2])
 SCRIPT_DIR = f"{PROJECT_ROOT}/modules/step03__fastmpnndesign"
 SWEEP_DIR = f"{SCRIPT_DIR}/hyper_param_sweep"
 STEP02_JSON = f"{SCRIPT_DIR}/test/step02_outputs/input_pdb_aligned_relaxed_metrics.json"

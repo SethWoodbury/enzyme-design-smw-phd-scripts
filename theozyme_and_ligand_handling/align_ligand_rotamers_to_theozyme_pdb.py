@@ -15,7 +15,7 @@ Input Arguments:
 Output: Combined PDB files saved in the specified output directory with the naming format "<rotamer_name>_<output_suffix>.pdb".
 
 EXAMPLE COMMAND USED BY SETH WOODBURY:
-singularity exec /software/containers/crispy.sif python /home/woodbuse/special_scripts/theozyme_and_ligand_handling/align_ligand_rotamers_to_theozyme_pdb.py --original_pdb /home/woodbuse/for/don_hilvert/zinc_amidase_proj/theozymes/fluorogenic_amide_SM/dft_geom_opt/R_intermediate/cpa/cpa_8cpa_rfa_tip_atoms.pdb --rotamer_dir /home/woodbuse/for/don_hilvert/zinc_amidase_proj/theozymes/fluorogenic_amide_SM/dft_geom_opt/R_intermediate/cpa/theozyme_pdbs --output_dir /home/woodbuse/for/don_hilvert/zinc_amidase_proj/theozymes/fluorogenic_amide_SM/dft_geom_opt/R_intermediate/cpa/theozyme_pdbs/out --atom_pairs ZN1,[ZN,ZN] O3,[UNL,O2] O2,[UNL,O1] N1,[UNL,N1] C1,[UNL,C8] --ligands_to_remove_after_pair_fitting UNL ZN HOH --output_suffix _theozyme
+singularity exec /net/software/containers/crispy.sif python /home/woodbuse/special_scripts/theozyme_and_ligand_handling/align_ligand_rotamers_to_theozyme_pdb.py --original_pdb /home/woodbuse/for/don_hilvert/zinc_amidase_proj/theozymes/fluorogenic_amide_SM/dft_geom_opt/R_intermediate/cpa/cpa_8cpa_rfa_tip_atoms.pdb --rotamer_dir /home/woodbuse/for/don_hilvert/zinc_amidase_proj/theozymes/fluorogenic_amide_SM/dft_geom_opt/R_intermediate/cpa/theozyme_pdbs --output_dir /home/woodbuse/for/don_hilvert/zinc_amidase_proj/theozymes/fluorogenic_amide_SM/dft_geom_opt/R_intermediate/cpa/theozyme_pdbs/out --atom_pairs ZN1,[ZN,ZN] O3,[UNL,O2] O2,[UNL,O1] N1,[UNL,N1] C1,[UNL,C8] --ligands_to_remove_after_pair_fitting UNL ZN HOH --output_suffix _theozyme
 '''
 
 import os

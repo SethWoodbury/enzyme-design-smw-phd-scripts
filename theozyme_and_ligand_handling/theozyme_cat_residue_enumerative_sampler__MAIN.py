@@ -25,6 +25,8 @@ import argparse
 import os
 import sys
 from multiprocessing import Pool
+from pathlib import Path
+_HERE = Path(__file__).resolve().parent
 
 
 def run_cmd(cmd):
@@ -37,7 +39,7 @@ def main():
     p.add_argument('--input_pdbs', nargs='+', required=True,
                    help='Glob patterns or explicit PDB filenames')
     p.add_argument('--step1_script',
-                   default='/home/woodbuse/special_scripts/theozyme_and_ligand_handling/theozyme_cat_residue_enumerative_sampler__STEP1_histidine_sampler.py',
+                   default=str(_HERE / 'theozyme_cat_residue_enumerative_sampler__STEP1_histidine_sampler.py'),
                    help='Path to the STEP1 histidine sampler')
     p.add_argument('--histidine_config', default=None,
                    help='JSON or file for STEP1; if omitted, STEP1 is skipped')
@@ -53,14 +55,14 @@ def main():
                    help='Number of parallel processes')
     # STEP2 args
     p.add_argument('--step2_script',
-                   default='/home/woodbuse/special_scripts/theozyme_and_ligand_handling/theozyme_cat_residue_enumerative_sampler__STEP2_glu_asp_sampler.py',
+                   default=str(_HERE / 'theozyme_cat_residue_enumerative_sampler__STEP2_glu_asp_sampler.py'),
                    help='Path to the STEP2 glu/asp sampler')
     p.add_argument('--gluE_aspD_json', default=None,
                    help='JSON or file for STEP2; if omitted, STEP2 is skipped')
     # STEP3 args
     p.add_argument(
         '--step3_script',
-        default='/home/woodbuse/special_scripts/theozyme_and_ligand_handling/theozyme_cat_residue_enumerative_sampler__STEP3_residue_rotator.py',
+        default=str(_HERE / 'theozyme_cat_residue_enumerative_sampler__STEP3_residue_rotator.py'),
         help='Path to the STEP3 residue rotator script'
     )
     p.add_argument(

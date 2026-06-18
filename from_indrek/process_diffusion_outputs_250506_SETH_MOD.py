@@ -26,7 +26,16 @@ from pyrosetta.rosetta.core.import_pose import pose_from_pdbstring
 import itertools
 import json
 import copy
-sys.path.insert(0, "/net/software/lab/rf_diffusion_aa")
+
+# --- locate repo root + shared external paths ---
+import sys as _sys
+from pathlib import Path as _Path
+for _anc in _Path(__file__).resolve().parents:
+    if (_anc / "repo_paths.py").is_file():
+        _sys.path.insert(0, str(_anc)); break
+import repo_paths
+
+sys.path.insert(0, repo_paths.RFDIFFUSION_AA)
 
 
 aa3to1 = {
@@ -423,7 +432,7 @@ def main(args):
     print("### EXTRA RES ###")
     print(extra_res_fa)
 
-    DAB = "/net/software/lab/scripts/enzyme_design/DAlphaBall.gcc"
+    DAB = repo_paths.DALPHABALL
     if not os.path.exists(DAB):
         DAB = None
 
