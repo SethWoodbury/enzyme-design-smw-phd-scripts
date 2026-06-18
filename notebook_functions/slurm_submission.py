@@ -649,72 +649,83 @@ echo "[JOB $SLURM_ARRAY_TASK_ID] All runs finished"
     print(f"{'='*string_len}")
 
 
-def make_af2_submit_file(name, cmds, job_name, time, logs_dir, cmds_per_job):
+def make_af2_submit_file(name, cmds, job_name, time, logs_dir, cmds_per_job,
+                         *, cpus_per_task=2, memory='4G', queue='cpu', **kwargs):
     """
     Write a SLURM CPU array submit script for AlphaFold2 jobs.
+
+    Thin wrapper over submit_array_job() so AF2 jobs get the modern submit
+    style instead of the old bare-bones script: per-task logs
+    ('{logs_dir}{job_name}_%a.stdout/.stderr'), coverage validation,
+    auto-requeue + skip-markers (re-running resumes only the undone commands
+    after a preemption/timeout), and per-command timing summaries.
+
+    The original positional signature is preserved, so existing notebook calls
+    keep working unchanged:
+
+        make_af2_submit_file(name, cmds, job_name, time, logs_dir, cmds_per_job)
+
+    where `name` is the submit-file path to write and `cmds` is the commands
+    file (one shell command per line). num_jobs is derived as
+    ceil(num_cmds / cmds_per_job).
+
+    Keyword-only extras (optional) tune resources / forward to submit_array_job():
+        cpus_per_task : CPUs per task (default 2; was an implicit 1 before).
+        memory        : --mem value (default '4G', the historical default).
+        queue         : partition (default 'cpu'; e.g. 'cpu-bf').
+        **kwargs      : anything submit_array_job() accepts — constraint,
+                        requeue, max_restarts, exclude_nodes, force_redo, ...
+
+    CHANGED vs. the old version: logs now go to per-task files instead of a
+    single 'log.out/log.err'; jobs auto-requeue on preemption by default (pass
+    requeue=False to disable); a submission report is printed.
     """
-    with open(cmds, 'r') as f:
-        num_cmds = len(f.readlines())
-
-    pertask = cmds_per_job
-    num_jobs = num_cmds // pertask + 1
-
-    script = f'''#!/bin/bash
-#SBATCH -J {job_name}
-#SBATCH -e {logs_dir}log.err
-#SBATCH -o {logs_dir}log.out
-#SBATCH -p cpu
-#SBATCH -a 1-{num_jobs}
-#SBATCH --mem=4G
-#SBATCH -t {time}
-
-PER_TASK={pertask}
-START_NUM=$(( ($SLURM_ARRAY_TASK_ID - 1) * $PER_TASK + 1 ))
-END_NUM=$(( $SLURM_ARRAY_TASK_ID * $PER_TASK ))
-echo This is task $SLURM_ARRAY_TASK_ID, which will do runs $START_NUM to $END_NUM
-for (( run=$START_NUM; run<=END_NUM; run++ )); do
-  echo This is SLURM task $SLURM_ARRAY_TASK_ID, run number $run
-  CMD=$(sed -n "${{run}}p" {cmds})
-  echo "${{CMD}}" | bash
-done
-'''
-    with open(name, 'w') as f:
-        f.write(script)
+    with open(cmds) as f:
+        num_cmds = sum(1 for line in f if line.strip())
+    cpj = int(cmds_per_job)
+    num_jobs = max(1, (num_cmds + cpj - 1) // cpj)
+    return submit_array_job(
+        commands=cmds, time=time, cpus_per_task=cpus_per_task, job_name=job_name,
+        memory=memory, submit_file=name, logs_dir=logs_dir, num_jobs=num_jobs,
+        cmds_per_job=cpj, queue=queue, **kwargs,
+    )
 
 
 def make_af2_submit_file_with_mem_and_optional_gpu(name, cmds, job_name, time,
                                                     logs_dir, cmds_per_job,
-                                                    memory, cpu_or_gpu):
+                                                    memory, cpu_or_gpu,
+                                                    *, cpus_per_task=2, **kwargs):
     """
-    Write a SLURM array submit script for AF2 with configurable memory and GPU.
+    Write a SLURM array submit script for AF2 with configurable memory and an
+    optional GPU — now using the modern submit_array_job() style.
+
+    The original positional signature is preserved, so existing notebook calls
+    keep working unchanged:
+
+        make_af2_submit_file_with_mem_and_optional_gpu(
+            name, cmds, job_name, time, logs_dir, cmds_per_job, memory, cpu_or_gpu)
+
+    `cpu_or_gpu` is used as the partition/queue: 'cpu' or 'gpu' (also accepts
+    the backfill variants 'cpu-bf' / 'gpu-bf', etc.). For GPU jobs this now uses
+    the CURRENT cluster GRES via submit_array_job's gpu_class (defaults to
+    'small') instead of the retired 'gpu:a4000:1' name — so GPU jobs actually
+    schedule again. num_jobs is derived as ceil(num_cmds / cmds_per_job).
+
+    Keyword-only extras (optional) forward to submit_array_job():
+        cpus_per_task : CPUs per task (default 2; was an implicit 1 before).
+        **kwargs      : gpu_class ('small'|'large'|'h200'), constraint,
+                        requeue, exclude_nodes, force_redo, extra_sbatch, ...
+
+    CHANGED vs. the old version: the broken legacy GPU GRES ('gpu:a4000:1') is
+    replaced with the supported gpu_class scheme; logs go to per-task files;
+    jobs auto-requeue on preemption by default (pass requeue=False to disable).
     """
-    with open(cmds, 'r') as f:
-        num_cmds = len(f.readlines())
-
-    pertask = cmds_per_job
-    num_jobs = num_cmds // pertask + (0 if num_cmds % pertask == 0 else 1)
-
-    gpu_line = '#SBATCH --gres=gpu:a4000:1' if cpu_or_gpu == 'gpu' else ''
-
-    script = f'''#!/bin/bash
-#SBATCH -J {job_name}
-#SBATCH -e {logs_dir}log.err
-#SBATCH -o {logs_dir}log.out
-#SBATCH -p {cpu_or_gpu}
-{gpu_line}
-#SBATCH -a 1-{num_jobs}
-#SBATCH --mem={memory}
-#SBATCH -t {time}
-
-PER_TASK={pertask}
-START_NUM=$(( ($SLURM_ARRAY_TASK_ID - 1) * $PER_TASK + 1 ))
-END_NUM=$(( $SLURM_ARRAY_TASK_ID * $PER_TASK ))
-echo This is task $SLURM_ARRAY_TASK_ID, which will do runs $START_NUM to $END_NUM
-for (( run=$START_NUM; run<=END_NUM; run++ )); do
-  echo This is SLURM task $SLURM_ARRAY_TASK_ID, run number $run
-  CMD=$(sed -n "${{run}}p" {cmds})
-  echo "${{CMD}}" | bash
-done
-'''
-    with open(name, 'w') as f:
-        f.write(script)
+    with open(cmds) as f:
+        num_cmds = sum(1 for line in f if line.strip())
+    cpj = int(cmds_per_job)
+    num_jobs = max(1, (num_cmds + cpj - 1) // cpj)
+    return submit_array_job(
+        commands=cmds, time=time, cpus_per_task=cpus_per_task, job_name=job_name,
+        memory=memory, submit_file=name, logs_dir=logs_dir, num_jobs=num_jobs,
+        cmds_per_job=cpj, queue=cpu_or_gpu, **kwargs,
+    )
