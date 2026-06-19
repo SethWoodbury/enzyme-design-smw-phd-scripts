@@ -650,7 +650,7 @@ echo "[JOB $SLURM_ARRAY_TASK_ID] All runs finished"
 
 
 def make_af2_submit_file(name, cmds, job_name, time, logs_dir, cmds_per_job,
-                         *, cpus_per_task=2, memory='4G', queue='cpu', **kwargs):
+                         *, cpus_per_task=1, memory='8G', queue='cpu', **kwargs):
     """
     Write a SLURM CPU array submit script for AlphaFold2 jobs.
 
@@ -670,8 +670,8 @@ def make_af2_submit_file(name, cmds, job_name, time, logs_dir, cmds_per_job,
     ceil(num_cmds / cmds_per_job).
 
     Keyword-only extras (optional) tune resources / forward to submit_array_job():
-        cpus_per_task : CPUs per task (default 2; was an implicit 1 before).
-        memory        : --mem value (default '4G', the historical default).
+        cpus_per_task : CPUs per task (default 1).
+        memory        : --mem value (default '8G').
         queue         : partition (default 'cpu'; e.g. 'cpu-bf').
         **kwargs      : anything submit_array_job() accepts — constraint,
                         requeue, max_restarts, exclude_nodes, force_redo, ...
@@ -693,8 +693,8 @@ def make_af2_submit_file(name, cmds, job_name, time, logs_dir, cmds_per_job,
 
 def make_af2_submit_file_with_mem_and_optional_gpu(name, cmds, job_name, time,
                                                     logs_dir, cmds_per_job,
-                                                    memory, cpu_or_gpu,
-                                                    *, cpus_per_task=2, **kwargs):
+                                                    memory='8G', cpu_or_gpu='gpu',
+                                                    *, cpus_per_task=1, **kwargs):
     """
     Write a SLURM array submit script for AF2 with configurable memory and an
     optional GPU — now using the modern submit_array_job() style.
@@ -712,7 +712,7 @@ def make_af2_submit_file_with_mem_and_optional_gpu(name, cmds, job_name, time,
     schedule again. num_jobs is derived as ceil(num_cmds / cmds_per_job).
 
     Keyword-only extras (optional) forward to submit_array_job():
-        cpus_per_task : CPUs per task (default 2; was an implicit 1 before).
+        cpus_per_task : CPUs per task (default 1).
         **kwargs      : gpu_class ('small'|'large'|'h200'), constraint,
                         requeue, exclude_nodes, force_redo, extra_sbatch, ...
 
