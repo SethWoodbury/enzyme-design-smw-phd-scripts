@@ -24,21 +24,39 @@ with EXACTLY TWO lines: a header line and EXACTLY ONE data row. ``description``
 (``<out>.sc.tmp.<pid>`` -> ``os.replace``) so SLURM-array re-runs never see a
 half-written file. ``--skip_if_sc_present`` makes re-runs idempotent.
 
-By default NO columns are dropped (the full set is written). Two opt-in flags
-trim columns as a pure POST-BUILD filter (computed values are never changed; the
-``--verbose`` REPORT always reflects the full computation):
+Column policy (applied as a pure POST-BUILD filter; computed values are never
+changed and the ``--verbose`` REPORT always reflects the FULL computation):
+
+  Catres-pair PAE aggregates report mean/max/MIN of the off-diagonal symmetric
+  catres x catres PAE: ``catres_pair_pae_mean/_max/_min`` (and the
+  ``catres_subset_pair_pae_*`` mirror when --catres_subset is given). The _min
+  stat is emitted ALWAYS and is kept by --lean.
+
+  AUTO-DROP (in ALL modes, incl. default/full -- these columns carry no info):
+    * Monomer (n_protein_chains == 1): af2_mean_pae_intra_chain_A,
+      af2_mean_pae_interaction, n_protein_chains are dropped. (>1 keeps them.)
+    * No terminal trim (N=0 and C=0): terminal_ignore_N, terminal_ignore_C are
+      dropped. (Either --N/C_terminus_tag_length_to_ignore > 0 keeps both.)
+    With --verbose the detection is PRINTED before the row is written.
+
+  Two opt-in flags further trim columns:
   --no_per_catres  drop ONLY the per-catalytic-residue columns
                    ({name3}{i}_rmsd/_bb_rmsd/_plddt/_pae and any --pae_full
                    pairwise {name3a}{i}_{name3b}{j}_pae columns); ALL catres_*
-                   aggregates are kept, everything else is kept.
-  --lean           emit ONLY the high-signal core (~18 cols: description, status,
-                   error, catres_signature, catres_count, af2_mean_plddt,
-                   af2_ptm_score, af2_mean_pae, af2_rmsd_to_input, ca_rmsd,
-                   tm_score, and the seven catres_* aggregates) PLUS the eight
-                   catres_subset_* aggregates only when --catres_subset is given.
-                   Drops per-catres, paths, folding metadata, monomer-redundant,
-                   terminal_ignore and ca_rmsd_TMalign. --lean wins over
-                   --no_per_catres.
+                   aggregates and everything else (status/error, metadata, paths)
+                   are kept. The auto-drops above still apply.
+  --lean           emit ONLY the high-signal core keep-list (those present after
+                   the auto-drops): description, pdb_path, af2_json_path, ref_path,
+                   catres_signature, catres_count, af2_mean_plddt, af2_ptm_score,
+                   af2_mean_pae, af2_mean_pae_intra_chain, af2_rmsd_to_input,
+                   af2_tol, ca_rmsd, tm_score, and the catres_* aggregates
+                   (catres_rmsd/_bb_rmsd/_lddt/_plddt/_pae_to_all_mean/
+                   _pair_pae_mean/_pair_pae_max/_pair_pae_min) PLUS the matching
+                   catres_subset_* aggregates (incl. _pair_pae_min) only when
+                   --catres_subset is given. --lean DROPS status, error, all
+                   per-catres columns, the --pae_full pairs, af2_model/_type/_seed/
+                   _recycles/_elapsed_time/_pae_length and ca_rmsd_TMalign. --lean
+                   wins over --no_per_catres.
 
 --------------------------------------------------------------------------------
 AF2 / superfold output facts (flat directory; one model per design is the norm)
@@ -78,7 +96,9 @@ The PAE matrix is 0-based over the UNTRIMMED predicted residue order. After the
 ordinal map (chain,resseq,icode)->pae_row is built with the SAME effective mapping
 the RMSD/pLDDT path uses. catres PAE metrics index the matrix through that map.
 PAE is directional: pairwise catres metrics use the symmetric average
-0.5*(pae[i][j]+pae[j][i]); the diagonal is excluded from pair aggregates.
+0.5*(pae[i][j]+pae[j][i]); the diagonal is excluded from pair aggregates. The
+off-diagonal pair PAE is aggregated as mean / max / MIN (catres_pair_pae_mean,
+_max, _min, plus the catres_subset_pair_pae_* mirror).
 
 Author: Woodbuse Lab
 """
@@ -1555,9 +1575,10 @@ def analyze_prediction(
     row["catres_plddt"] = _nanmean(catres_plddts)
     row["catres_pae_to_all_mean"] = _nanmean(catres_pae_rows)
 
-    pair_mean, pair_max = _catres_pair_pae(pae, catres_row_idx)
+    pair_mean, pair_max, pair_min = _catres_pair_pae(pae, catres_row_idx)
     row["catres_pair_pae_mean"] = pair_mean
     row["catres_pair_pae_max"] = pair_max
+    row["catres_pair_pae_min"] = pair_min
 
     # --- Optional full pairwise PAE (i<j; symmetric average) ------------------
     if opts.get("pae_full", False) and pae is not None:
@@ -1582,13 +1603,15 @@ def analyze_prediction(
             row["catres_subset_plddt"] = _nanmean([catres_plddts[i] for i in subset_idx])
             row["catres_subset_pae_to_all_mean"] = _nanmean([catres_pae_rows[i] for i in subset_idx])
             sub_rows = [catres_row_idx[i] for i in subset_idx]
-            sub_mean, sub_max = _catres_pair_pae(pae, sub_rows)
+            sub_mean, sub_max, sub_min = _catres_pair_pae(pae, sub_rows)
             row["catres_subset_pair_pae_mean"] = sub_mean
             row["catres_subset_pair_pae_max"] = sub_max
+            row["catres_subset_pair_pae_min"] = sub_min
         else:
             for col in ("catres_subset_rmsd", "catres_subset_bb_rmsd", "catres_subset_lddt",
                         "catres_subset_plddt", "catres_subset_pae_to_all_mean",
-                        "catres_subset_pair_pae_mean", "catres_subset_pair_pae_max"):
+                        "catres_subset_pair_pae_mean", "catres_subset_pair_pae_max",
+                        "catres_subset_pair_pae_min"):
                 row[col] = float("nan")
 
     # --- Finalize error string ------------------------------------------------
@@ -1652,20 +1675,77 @@ def _pae_full_pair_keys(catres_list: List[Dict[str, Any]]) -> List[str]:
     return keys
 
 
-# Lean core column set (Change 2). Order is preserved; only keys present in the
-# row are emitted. The subset aggregates are appended only when --catres_subset.
+# Lean core column set (Change C). Order is preserved; only keys present in the
+# row (after the Section-B auto-drops) are emitted. The subset aggregates are
+# appended only when --catres_subset. Per the column policy, --lean KEEPS the
+# pdb_path / af2_json_path / ref_path / af2_tol / af2_mean_pae_intra_chain columns
+# but DROPS status/error (those stay only in full/no_per_catres output).
 _LEAN_CORE_COLUMNS = [
-    "description", "status", "error", "catres_signature", "catres_count",
-    "af2_mean_plddt", "af2_ptm_score", "af2_mean_pae", "af2_rmsd_to_input",
+    "description", "pdb_path", "af2_json_path", "ref_path",
+    "catres_signature", "catres_count",
+    "af2_mean_plddt", "af2_ptm_score", "af2_mean_pae", "af2_mean_pae_intra_chain",
+    "af2_rmsd_to_input", "af2_tol",
     "ca_rmsd", "tm_score",
     "catres_rmsd", "catres_bb_rmsd", "catres_lddt", "catres_plddt",
-    "catres_pae_to_all_mean", "catres_pair_pae_mean", "catres_pair_pae_max",
+    "catres_pae_to_all_mean",
+    "catres_pair_pae_mean", "catres_pair_pae_max", "catres_pair_pae_min",
 ]
 _LEAN_SUBSET_COLUMNS = [
     "catres_subset_count", "catres_subset_rmsd", "catres_subset_bb_rmsd",
     "catres_subset_lddt", "catres_subset_plddt", "catres_subset_pae_to_all_mean",
     "catres_subset_pair_pae_mean", "catres_subset_pair_pae_max",
+    "catres_subset_pair_pae_min",
 ]
+
+# Section B: columns dropped in ALL modes when they carry no information.
+_MONOMER_REDUNDANT_COLUMNS = (
+    "af2_mean_pae_intra_chain_A", "af2_mean_pae_interaction", "n_protein_chains",
+)
+_NO_TRIM_COLUMNS = ("terminal_ignore_N", "terminal_ignore_C")
+
+
+def _apply_auto_drops(
+    row: Dict[str, Any],
+    opts: Dict[str, Any],
+) -> Dict[str, Any]:
+    """Section B: drop redundant columns in ALL modes (incl. default/full).
+
+    - Monomer (n_protein_chains == 1): drop af2_mean_pae_intra_chain_A,
+      af2_mean_pae_interaction, n_protein_chains.  (>1 keeps all three.)
+    - No terminal trim (opts n_ignore == 0 AND c_ignore == 0): drop
+      terminal_ignore_N, terminal_ignore_C.  (either > 0 keeps both.)
+
+    Detection is computed BEFORE dropping n_protein_chains (its value is still in
+    the row) and PRINTED when verbose. Returns a new dict with the keys removed.
+    """
+    verbose = opts.get("verbose", False)
+    drop: set = set()
+
+    # Monomer detection uses the still-present n_protein_chains value.
+    n_chains = row.get("n_protein_chains")
+    is_monomer = False
+    try:
+        is_monomer = int(n_chains) == 1
+    except (TypeError, ValueError):
+        is_monomer = False
+    if is_monomer:
+        present = [c for c in _MONOMER_REDUNDANT_COLUMNS if c in row]
+        drop.update(present)
+        if verbose and present:
+            log(f"[system: monomer (1 protein chain)] auto-dropped redundant "
+                f"columns: {', '.join(present)}")
+
+    n_ignore = int(opts.get("n_ignore", 0))
+    c_ignore = int(opts.get("c_ignore", 0))
+    if n_ignore == 0 and c_ignore == 0:
+        present = [c for c in _NO_TRIM_COLUMNS if c in row]
+        drop.update(present)
+        if verbose and present:
+            log(f"[no terminal trim (N=0,C=0)] auto-dropped: {', '.join(present)}")
+
+    if not drop:
+        return row
+    return {k: v for k, v in row.items() if k not in drop}
 
 
 def _apply_column_trim(
@@ -1673,13 +1753,22 @@ def _apply_column_trim(
     catres_list: List[Dict[str, Any]],
     opts: Dict[str, Any],
 ) -> Dict[str, Any]:
-    """Post-build column filter for the WRITTEN .sc (Change 2).
+    """Post-build column filter for the WRITTEN .sc (Sections B-E).
 
-    Selects/drops keys only -- never touches computed values. --lean wins over
-    --no_per_catres. With neither flag the row is returned unchanged (so default
-    output is byte-identical). The verbose REPORT runs BEFORE this and sees the
-    full row, so trimming never affects what is reported.
+    Selects/drops keys only -- never touches computed values. Order of operations
+    (spec section E):
+      1. (row already fully assembled by the caller)
+      2. Section-B auto-drops (ALL modes), printing the detection when verbose.
+      3. --lean keeps only the C lean set (those present); elif --no_per_catres
+         drops the per-catres + --pae_full pair columns. --lean wins over
+         --no_per_catres. With neither flag, only the B auto-drops are applied.
+    The verbose REPORT runs BEFORE this and sees the full row, so trimming never
+    affects what is reported.
     """
+    # Step 2: Section-B auto-drops apply in every mode.
+    row = _apply_auto_drops(row, opts)
+
+    # Step 3: explicit column-trim flags.
     if opts.get("lean", False):
         wanted = list(_LEAN_CORE_COLUMNS)
         if opts.get("catres_subset"):
@@ -1756,7 +1845,8 @@ def _emit_verbose_report(
         f"lddt={_fmt_num(g('catres_lddt'), 4)} plddt={_fmt_num(g('catres_plddt'))} "
         f"pae_to_all={_fmt_num(g('catres_pae_to_all_mean'))} "
         f"pair_mean={_fmt_num(g('catres_pair_pae_mean'))} "
-        f"pair_max={_fmt_num(g('catres_pair_pae_max'))}")
+        f"pair_max={_fmt_num(g('catres_pair_pae_max'))} "
+        f"pair_min={_fmt_num(g('catres_pair_pae_min'))}")
 
     if opts.get("catres_subset"):
         log(f"  subset : count={g('catres_subset_count', '-')} "
@@ -1766,7 +1856,8 @@ def _emit_verbose_report(
             f"plddt={_fmt_num(g('catres_subset_plddt'))} "
             f"pae_to_all={_fmt_num(g('catres_subset_pae_to_all_mean'))} "
             f"pair_mean={_fmt_num(g('catres_subset_pair_pae_mean'))} "
-            f"pair_max={_fmt_num(g('catres_subset_pair_pae_max'))}")
+            f"pair_max={_fmt_num(g('catres_subset_pair_pae_max'))} "
+            f"pair_min={_fmt_num(g('catres_subset_pair_pae_min'))}")
 
     log(f"  warnings: {', '.join(warnings) if warnings else 'none'}")
     log("=" * 48)
@@ -1781,10 +1872,16 @@ def _nanmean(values: List[float]) -> float:
     return float(np.mean(finite)) if finite.size > 0 else float("nan")
 
 
-def _catres_pair_pae(pae: Optional[np.ndarray], row_indices: List[Optional[int]]) -> Tuple[float, float]:
-    """Mean and max of off-diagonal catres x catres symmetric-averaged PAE."""
+def _catres_pair_pae(
+    pae: Optional[np.ndarray], row_indices: List[Optional[int]]
+) -> Tuple[float, float, float]:
+    """Mean, max and min of off-diagonal catres x catres symmetric-averaged PAE.
+
+    Uses symmetric_pair_pae for each i<j pair (the diagonal is excluded). Returns
+    (nan, nan, nan) when fewer than two valid row indices contribute a finite pair.
+    """
     if pae is None:
-        return float("nan"), float("nan")
+        return float("nan"), float("nan"), float("nan")
     vals = []
     n = len(row_indices)
     for a in range(n):
@@ -1793,8 +1890,8 @@ def _catres_pair_pae(pae: Optional[np.ndarray], row_indices: List[Optional[int]]
             if np.isfinite(v):
                 vals.append(v)
     if not vals:
-        return float("nan"), float("nan")
-    return float(np.mean(vals)), float(np.max(vals))
+        return float("nan"), float("nan"), float("nan")
+    return float(np.mean(vals)), float(np.max(vals)), float(np.min(vals))
 
 
 def _tmalign_ca_rmsd(
@@ -2292,14 +2389,18 @@ Each .sc is a 2-line CSV (header + one row); 'description' is the first column.
     parser.add_argument("--no_per_catres", action="store_true",
                         help="Drop ONLY the per-catalytic-residue columns from the written .sc "
                              "({AA}{i}_rmsd/_bb_rmsd/_plddt/_pae and any --pae_full pair columns); "
-                             "all catres_* aggregates are kept. Post-build filter: computed values "
-                             "are unchanged and --verbose still reports the full computation.")
+                             "all catres_* aggregates, status/error, metadata and paths are kept. "
+                             "Post-build filter: computed values are unchanged and --verbose still "
+                             "reports the full computation. (Monomer/no-trim auto-drops still apply.)")
     parser.add_argument("--lean", action="store_true",
-                        help="Emit ONLY the high-signal core column set (~18 cols; +8 subset "
-                             "aggregates if --catres_subset). Drops per-catres, paths, folding "
-                             "metadata, monomer-redundant, terminal_ignore and ca_rmsd_TMalign. "
-                             "Wins over --no_per_catres. Post-build filter only -- computed values "
-                             "are unchanged and --verbose still reports the full computation.")
+                        help="Emit ONLY the high-signal keep-list: description, pdb_path, "
+                             "af2_json_path, ref_path, catres_signature/_count, af2_mean_plddt, "
+                             "af2_ptm_score, af2_mean_pae, af2_mean_pae_intra_chain, "
+                             "af2_rmsd_to_input, af2_tol, ca_rmsd, tm_score and all catres_* "
+                             "aggregates incl. catres_pair_pae_min (+ the catres_subset_* mirror "
+                             "incl. _min when --catres_subset). Drops status/error, per-catres, "
+                             "folding metadata and ca_rmsd_TMalign. Wins over --no_per_catres. "
+                             "Post-build filter only; --verbose still reports the full computation.")
     parser.add_argument("--N_terminus_tag_length_to_ignore", type=int, default=0,
                         help="N-terminal protein residues to ignore in global CA align (chain A)")
     parser.add_argument("--C_terminus_tag_length_to_ignore", type=int, default=0,
