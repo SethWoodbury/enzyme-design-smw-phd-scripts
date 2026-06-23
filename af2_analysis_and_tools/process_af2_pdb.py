@@ -49,7 +49,7 @@ changed and the ``--verbose`` REPORT always reflects the FULL computation):
                    the auto-drops): description, pdb_path, af2_json_path, ref_path,
                    catres_signature, catres_count, af2_mean_plddt, af2_ptm_score,
                    af2_mean_pae, af2_mean_pae_intra_chain, af2_rmsd_to_input,
-                   af2_tol, ca_rmsd, tm_score, and the catres_* aggregates
+                   af2_rmsd_convergence_tol, ca_rmsd, tm_score, and the catres_* aggregates
                    (catres_rmsd/_bb_rmsd/_lddt/_plddt/_pae_to_all_mean/
                    _pair_pae_mean/_pair_pae_max/_pair_pae_min) PLUS the matching
                    catres_subset_* aggregates (incl. _pair_pae_min) only when
@@ -988,7 +988,7 @@ def parse_af2_json(json_path: str, want_pae: bool = True) -> Dict[str, Any]:
     out["af2_mean_pae_intra_chain_A"] = _reduce_scalar(data.get("mean_pae_intra_chain_A"), min)
     out["af2_mean_pae_interaction"] = _reduce_scalar(data.get("mean_pae_interaction"), min)
     out["af2_rmsd_to_input"] = _reduce_scalar(data.get("rmsd_to_input"), min)
-    out["af2_tol"] = _reduce_scalar(data.get("tol"), min)
+    out["af2_rmsd_convergence_tol"] = _reduce_scalar(data.get("tol"), min)
     out["af2_elapsed_time"] = _reduce_scalar(data.get("elapsed_time"), min)
 
     recycles = data.get("recycles")
@@ -1678,13 +1678,13 @@ def _pae_full_pair_keys(catres_list: List[Dict[str, Any]]) -> List[str]:
 # Lean core column set (Change C). Order is preserved; only keys present in the
 # row (after the Section-B auto-drops) are emitted. The subset aggregates are
 # appended only when --catres_subset. Per the column policy, --lean KEEPS the
-# pdb_path / af2_json_path / ref_path / af2_tol / af2_mean_pae_intra_chain columns
+# pdb_path / af2_json_path / ref_path / af2_rmsd_convergence_tol / af2_mean_pae_intra_chain columns
 # but DROPS status/error (those stay only in full/no_per_catres output).
 _LEAN_CORE_COLUMNS = [
     "description", "pdb_path", "af2_json_path", "ref_path",
     "catres_signature", "catres_count",
     "af2_mean_plddt", "af2_ptm_score", "af2_mean_pae", "af2_mean_pae_intra_chain",
-    "af2_rmsd_to_input", "af2_tol",
+    "af2_rmsd_to_input", "af2_rmsd_convergence_tol",
     "ca_rmsd", "tm_score",
     "catres_rmsd", "catres_bb_rmsd", "catres_lddt", "catres_plddt",
     "catres_pae_to_all_mean",
@@ -1823,7 +1823,7 @@ def _emit_verbose_report(
 
     log(f"  AF2    : mean_plddt={_fmt_num(g('af2_mean_plddt'))} ptm={_fmt_num(g('af2_ptm_score'))} "
         f"mean_pae={_fmt_num(g('af2_mean_pae'))} rmsd_to_input={_fmt_num(g('af2_rmsd_to_input'))} "
-        f"recycles={g('af2_recycles', '-')} tol={_fmt_num(g('af2_tol'))} "
+        f"recycles={g('af2_recycles', '-')} tol={_fmt_num(g('af2_rmsd_convergence_tol'))} "
         f"pae_len={g('af2_pae_length', '-')}")
 
     if catres_list:
@@ -2423,7 +2423,7 @@ Each .sc is a 2-line CSV (header + one row); 'description' is the first column.
                         help="Emit ONLY the high-signal keep-list: description, pdb_path, "
                              "af2_json_path, ref_path, catres_signature/_count, af2_mean_plddt, "
                              "af2_ptm_score, af2_mean_pae, af2_mean_pae_intra_chain, "
-                             "af2_rmsd_to_input, af2_tol, ca_rmsd, tm_score and all catres_* "
+                             "af2_rmsd_to_input, af2_rmsd_convergence_tol, ca_rmsd, tm_score and all catres_* "
                              "aggregates incl. catres_pair_pae_min (+ the catres_subset_* mirror "
                              "incl. _min when --catres_subset). Drops status/error, per-catres, "
                              "folding metadata and ca_rmsd_TMalign. Wins over --no_per_catres. "
