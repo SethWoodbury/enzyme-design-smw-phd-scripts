@@ -1960,7 +1960,7 @@ def process_job_write_sc(args: Tuple[ResolvedJob, Dict[str, Any]]):
     ref_cache = _get_worker_ref_cache()
 
     if opts.get("skip_if_sc_present", False) and os.path.isfile(job.out_sc):
-        return job.description, "skipped", []
+        return job.description, "skipped", [], None
 
     # Resolver miss recorded up front -> emit an error row, don't silently drop.
     if job.error:
@@ -1976,8 +1976,8 @@ def process_job_write_sc(args: Tuple[ResolvedJob, Dict[str, Any]]):
         try:
             write_sc_atomic(row, job.out_sc)
         except Exception as e:
-            return job.description, "error", [f"write_fail:{e}"]
-        return job.description, "error", [job.error]
+            return job.description, "error", [f"write_fail:{e}"], None
+        return job.description, "error", [job.error], len(row)
 
     try:
         row, warnings = analyze_prediction(
@@ -1998,9 +1998,9 @@ def process_job_write_sc(args: Tuple[ResolvedJob, Dict[str, Any]]):
     try:
         write_sc_atomic(row, job.out_sc)
     except Exception as e:
-        return job.description, "error", [f"write_fail:{e}"]
-    vlog(opts.get("verbose", False), f"wrote {job.out_sc}")
-    return job.description, row.get("status", "ok"), warnings
+        return job.description, "error", [f"write_fail:{e}"], None
+    vlog(opts.get("verbose", False), f"wrote {job.out_sc} ({len(row)} columns)")
+    return job.description, row.get("status", "ok"), warnings, len(row)
 
 
 # Per-process ref cache (bounded). Populated lazily inside each Pool worker.
@@ -2051,6 +2051,11 @@ def _run_pool(jobs: List[ResolvedJob], opts: Dict[str, Any], cpus: int,
 
     n = len(jobs)
     log(f"Processing {n} job(s) with {cpus} worker(s)...")
+    if opts.get("lean"):
+        log("[lean mode] writing trimmed core columns (status/error, per-catres detail, "
+            "and bulky metadata dropped).")
+    elif opts.get("no_per_catres"):
+        log("[--no_per_catres] dropping the per-catalytic-residue columns from each .sc.")
     rows_for_combined: List[Dict[str, Any]] = []
     statuses = {"ok": 0, "error": 0, "skipped": 0}
     start = time.time()
@@ -2068,11 +2073,29 @@ def _run_pool(jobs: List[ResolvedJob], opts: Dict[str, Any], cpus: int,
                     elapsed = time.time() - start
                     log(f"  {i}/{n} done ({elapsed:.1f}s)")
 
-    for desc, status, warns in results:
+    final_ncols = None
+    ok_ncols = None
+    for desc, status, warns, ncols in results:
         statuses[status] = statuses.get(status, 0) + 1
+        if ncols is not None:
+            if final_ncols is None:
+                final_ncols = ncols
+            if status == "ok":
+                ok_ncols = ncols
         if warns:
             for w in warns:
                 vlog(opts.get("verbose", False), f"  [{desc}] {w}", "WARN")
+    if ok_ncols is not None:
+        final_ncols = ok_ncols
+    if final_ncols is None:  # e.g. all skipped -> read a header off an existing .sc
+        for job in jobs:
+            if os.path.isfile(job.out_sc):
+                try:
+                    with open(job.out_sc) as f:
+                        final_ncols = len(f.readline().rstrip("\n").split(","))
+                    break
+                except Exception:
+                    pass
 
     if combined_csv:
         # Re-read the .sc files (bounded RAM not a concern for combined opt-in).
@@ -2086,7 +2109,8 @@ def _run_pool(jobs: List[ResolvedJob], opts: Dict[str, Any], cpus: int,
                     pass
         if rows_for_combined:
             pd.DataFrame.from_records(rows_for_combined).to_csv(combined_csv, index=False)
-            log(f"Combined CSV written: {combined_csv} ({len(rows_for_combined)} rows)")
+            log(f"Combined CSV written: {combined_csv} "
+                f"({len(rows_for_combined)} rows, {len(rows_for_combined[0])} columns)")
 
     # Report where the .sc files were written (unique output dirs).
     out_dirs = sorted({os.path.dirname(os.path.abspath(job.out_sc)) for job in jobs})
@@ -2097,8 +2121,11 @@ def _run_pool(jobs: List[ResolvedJob], opts: Dict[str, Any], cpus: int,
     else:
         out_loc = f"{len(out_dirs)} dirs: " + ", ".join(out_dirs[:5]) + (
             f" (+{len(out_dirs) - 5} more)" if len(out_dirs) > 5 else "")
+    cols_note = f"; columns={final_ncols}" if final_ncols is not None else ""
+    lean_note = " [lean]" if opts.get("lean") else (" [no_per_catres]" if opts.get("no_per_catres") else "")
     log(f"Done. ok={statuses.get('ok', 0)} error={statuses.get('error', 0)} "
-        f"skipped={statuses.get('skipped', 0)} ({time.time() - start:.1f}s); output -> {out_loc}")
+        f"skipped={statuses.get('skipped', 0)} ({time.time() - start:.1f}s); "
+        f"output -> {out_loc}{cols_note}{lean_note}")
 
 
 def run_single(args, opts: Dict[str, Any]) -> None:
