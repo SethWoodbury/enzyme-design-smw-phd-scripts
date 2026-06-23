@@ -45,11 +45,13 @@ import csv
 import glob
 import time
 import shutil
+import json
 import fnmatch
 import argparse
 import tempfile
 from typing import List, Dict, Tuple, Optional, Iterable
 from concurrent.futures import ThreadPoolExecutor, as_completed, wait, FIRST_COMPLETED
+from multiprocessing import Pool
 
 # csv fields can be long (wide per-catres tables); lift the limit defensively.
 try:
@@ -269,14 +271,109 @@ def stream_concat_csvs(shard_paths: List[str], out_csv: str):
                 shutil.copyfileobj(f, out_f)
 
 
+# ==============================================================================
+#  BACKWARDS-COMPATIBLE JSON-PARSE MODE
+#  The original af2_parse_processing_multi.py behavior: parse AF2
+#  *_prediction_results.json files directly into a summary CSV -- ref-free, no
+#  structural metrics, ORIGINAL column names. (The default mode of this script is
+#  now the .sc concatenator above; --parse_json restores this old behavior.)
+# ==============================================================================
+JSON_SUFFIX = "_prediction_results.json"
+
+
+def _af2_safe_loads(s: str):
+    """Parse JSON tolerating trailing garbage (as the original script did)."""
+    try:
+        return json.loads(s)
+    except json.JSONDecodeError as e:
+        if e.pos < len(s):
+            return json.loads(s[:e.pos])
+        raise
+
+
+def _reduce(value, reducer):
+    """Reduce a (possibly list-valued) field to a scalar; NaN if missing/empty."""
+    if isinstance(value, list):
+        return reducer(value) if value else float("nan")
+    return value if value is not None else float("nan")
+
+
+def parse_af2_json_oldnames(json_file: str) -> Optional[Dict[str, object]]:
+    """Parse one AF2 *_prediction_results.json into the ORIGINAL column schema."""
+    try:
+        with open(json_file) as f:
+            data = _af2_safe_loads(f.read())
+    except Exception as e:  # noqa: BLE001
+        print(f"  [Error] {json_file}: {e}")
+        return None
+    if json_file.endswith(JSON_SUFFIX):
+        pdb_path = json_file[:-len(JSON_SUFFIX)] + "_unrelaxed.pdb"
+    else:
+        pdb_path = json_file.replace("prediction_results.json", "unrelaxed.pdb")
+    return {
+        "af2_json_path": json_file,
+        "pdb_path": pdb_path,
+        "mean_plddt": _reduce(data.get("mean_plddt", float("nan")), max),
+        "rmsd_to_input": _reduce(data.get("rmsd_to_input", float("nan")), min),
+        "mean_pae_intra_chain": _reduce(data.get("mean_pae_intra_chain", float("nan")), min),
+        "mean_pae": _reduce(data.get("mean_pae", float("nan")), min),
+        "pTMscore": _reduce(data.get("pTMscore", float("nan")), max),
+        "af2_convergence_tol": _reduce(data.get("tol", float("nan")), min),
+        "af2_elapsed_folding_time": _reduce(data.get("elapsed_time", float("nan")), min),
+    }
+
+
+def run_parse_json(directory: str, cpus: Optional[int], out_csv: Optional[str]) -> None:
+    """Directly parse a flat directory of AF2 prediction JSONs into a summary CSV."""
+    import pandas as pd  # heavy; only needed in this mode
+    t0 = time.time()
+    directory = os.path.abspath(directory.rstrip("/"))
+    json_files = sorted(glob.glob(os.path.join(directory, "*" + JSON_SUFFIX)))
+    if not json_files:  # fall back to any *.json (the original globbed *.json)
+        json_files = sorted(glob.glob(os.path.join(directory, "*.json")))
+    if not json_files:
+        print(f"[Exit] No *_prediction_results.json (or *.json) files in {directory}.")
+        return
+    cpus = cpus if cpus else max(1, (os.cpu_count() or 6) - 5)
+    out_csv = out_csv or os.path.join(directory, "af2_out_parsed.csv")
+    print("############################################")
+    print("###   AF2 JSON PARSE (backwards-compat)  ###")
+    print("############################################")
+    print(f"Directory  : {directory}")
+    print(f"JSON files : {len(json_files)} | CPUs: {cpus}")
+    print(f"Output     : {out_csv}")
+    print("--------------------------------------------")
+    results: List[Dict[str, object]] = []
+    with Pool(processes=cpus) as pool:
+        for i, r in enumerate(pool.imap_unordered(parse_af2_json_oldnames, json_files), 1):
+            if r:
+                results.append(r)
+            if i in (100, 1000, 10000) or i % 10000 == 0:
+                el = time.time() - t0
+                eta = el / i * (len(json_files) - i)
+                print(f"  parsed {i}/{len(json_files)} | {fmt_secs(el)} | ETA {fmt_secs(eta)}")
+    df = pd.DataFrame.from_records(results)
+    if len(df):
+        df = df.sort_values("pdb_path")  # deterministic order
+    df.to_csv(out_csv, index=False)
+    print(f"\nParsed {len(results)} JSON(s) -> {out_csv}  ({fmt_secs(time.time() - t0)})")
+
+
 # -------------
 # Main driver
 # -------------
 def main():
     ap = argparse.ArgumentParser(
-        description="Concatenate per-prediction AF2 .sc CSV files (from process_af2_pdb.py) into one CSV.")
-    ap.add_argument("--af2_sc_dir", required=True,
-                    help="Directory containing the flat per-prediction *.sc files.")
+        description="Concatenate per-prediction AF2 .sc CSV files (from process_af2_pdb.py) into one CSV, "
+                    "OR (--parse_json) directly parse AF2 prediction JSONs into a summary CSV.")
+    ap.add_argument("--af2_sc_dir", required=False, default=None,
+                    help="CONCAT MODE: directory containing the flat per-prediction *.sc files.")
+    ap.add_argument("--parse_json", default=None, metavar="DIR",
+                    help="JSON-PARSE MODE (backwards-compatible): instead of concatenating .sc files, parse "
+                         "the AF2 *_prediction_results.json files in DIR directly into a summary CSV "
+                         "(ref-free, original column names). Mutually exclusive with --af2_sc_dir.")
+    ap.add_argument("--cpus", type=int, default=None,
+                    help="JSON-PARSE MODE only: worker processes (default cpu_count()-5).")
     ap.add_argument("--optional_path_for_summary_stats", default=None,
                     help=f"Output CSV path; default {DEFAULT_OUTPUT_NAME} inside --af2_sc_dir.")
     ap.add_argument("--recursive", action="store_true",
@@ -296,6 +393,15 @@ def main():
     ap.add_argument("--find_files_without_viable_data", action="store_true",
                     help="Discovery-only: list .sc files with no usable data row, then exit.")
     args = ap.parse_args()
+
+    # --- Mode dispatch: JSON-parse (backwards-compatible) vs .sc concat --------
+    if args.parse_json:
+        if args.af2_sc_dir:
+            ap.error("--parse_json and --af2_sc_dir are mutually exclusive (pick JSON-parse OR .sc concat).")
+        run_parse_json(args.parse_json, args.cpus, args.optional_path_for_summary_stats)
+        return
+    if not args.af2_sc_dir:
+        ap.error("one of --af2_sc_dir (concatenate .sc files) or --parse_json DIR (parse AF2 JSONs) is required.")
 
     root = os.path.abspath(args.af2_sc_dir.rstrip("/"))
     out_csv = args.optional_path_for_summary_stats or os.path.join(root, DEFAULT_OUTPUT_NAME)
