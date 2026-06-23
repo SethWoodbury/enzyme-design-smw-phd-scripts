@@ -24,6 +24,22 @@ with EXACTLY TWO lines: a header line and EXACTLY ONE data row. ``description``
 (``<out>.sc.tmp.<pid>`` -> ``os.replace``) so SLURM-array re-runs never see a
 half-written file. ``--skip_if_sc_present`` makes re-runs idempotent.
 
+By default NO columns are dropped (the full set is written). Two opt-in flags
+trim columns as a pure POST-BUILD filter (computed values are never changed; the
+``--verbose`` REPORT always reflects the full computation):
+  --no_per_catres  drop ONLY the per-catalytic-residue columns
+                   ({name3}{i}_rmsd/_bb_rmsd/_plddt/_pae and any --pae_full
+                   pairwise {name3a}{i}_{name3b}{j}_pae columns); ALL catres_*
+                   aggregates are kept, everything else is kept.
+  --lean           emit ONLY the high-signal core (~18 cols: description, status,
+                   error, catres_signature, catres_count, af2_mean_plddt,
+                   af2_ptm_score, af2_mean_pae, af2_rmsd_to_input, ca_rmsd,
+                   tm_score, and the seven catres_* aggregates) PLUS the eight
+                   catres_subset_* aggregates only when --catres_subset is given.
+                   Drops per-catres, paths, folding metadata, monomer-redundant,
+                   terminal_ignore and ca_rmsd_TMalign. --lean wins over
+                   --no_per_catres.
+
 --------------------------------------------------------------------------------
 AF2 / superfold output facts (flat directory; one model per design is the norm)
 --------------------------------------------------------------------------------
@@ -1209,8 +1225,13 @@ def analyze_prediction(
     argparse, no prints except via the verbose flag in ``opts``.
 
     opts keys: verbose, tmalign, pae_full, no_pae, n_ignore, c_ignore,
-               catres_subset (list[int] or None).
+               catres_subset (list[int] or None), no_per_catres, lean.
     ref_cache: optional per-worker dict {ref_path: {"structure", "catres"}}.
+
+    The optional ``no_per_catres`` / ``lean`` keys are applied ONLY as a final
+    post-build filter on the returned row dict (see ``_apply_column_trim``); the
+    full computation is performed regardless so the verbose REPORT (and any
+    aggregates) always reflect every value. ``lean`` wins over ``no_per_catres``.
 
     Returns (row_dict, warnings). row_dict["status"] is "ok" or "error".
     """
@@ -1233,7 +1254,9 @@ def analyze_prediction(
     def fail(reason: str) -> Tuple[Dict[str, Any], List[str]]:
         row["status"] = "error"
         row["error"] = reason
-        return row, warnings
+        if opts.get("verbose", False):
+            _emit_verbose_report(row, [], [], opts, warnings)
+        return _apply_column_trim(row, [], opts), warnings
 
     # --- Input validation -----------------------------------------------------
     if not os.path.isfile(pred_pdb):
@@ -1271,6 +1294,18 @@ def analyze_prediction(
         catres_list = get_catalytic_residues(ref_pdb, verbose=verbose)
         if ref_cache is not None:
             ref_cache[ref_pdb] = {"structure": ref_structure, "catres": catres_list}
+
+    if verbose:
+        n_pred_res = sum(
+            1 for model in pred_structure_orig for chain in model
+            for r in chain.get_residues() if is_protein_residue(r)
+        )
+        n_ref_res = sum(
+            1 for model in ref_structure for chain in model
+            for r in chain.get_residues() if is_protein_residue(r)
+        )
+        vlog(True, f"  loaded pred={n_pred_res} residues, ref={n_ref_res} residues "
+                   f"(pred={os.path.basename(pred_pdb)}, ref={os.path.basename(ref_pdb)})")
 
     # --- Multichain warn + proceed (P0 #6) -----------------------------------
     pred_chains = [chain.id for model in pred_structure_orig for chain in model
@@ -1338,6 +1373,13 @@ def analyze_prediction(
     row["terminal_ignore_C"] = used_c
     row["ca_rmsd"] = ca_rmsd
 
+    if alignment_ok:
+        vlog(verbose, f"  CA Kabsch aligned on {len(ref_ca)} CA atoms; "
+                      f"ca_rmsd={ca_rmsd:.3f} (used N={used_n},C={used_c})")
+    else:
+        vlog(verbose, f"  CA-count mismatch pred=? ref={len(ref_ca)} across all "
+                      f"fallbacks -> per-catres RMSDs = NaN")
+
     if aligned_structure is None:
         # CA count never matched -> alignment-dependent metrics are NaN, but we
         # still emit AF2 scalars and PAE so the row is informative.
@@ -1367,6 +1409,18 @@ def analyze_prediction(
         catres_valid.append(valid)
         catres_pred_res.append(pred_res)
         catres_ref_res.append(ref_res)
+        if verbose:
+            tag = f"{name3}{len(catres_valid)} ({ch_id}/{name3}/{res_num})"
+            if valid:
+                vlog(True, f"  catres {tag}: valid")
+            elif pred_res is None or ref_res is None:
+                vlog(True, f"  catres {tag}: not_found "
+                           f"(pred={'-' if pred_res is None else pred_res.get_resname()},"
+                           f"ref={'-' if ref_res is None else ref_res.get_resname()})")
+            else:
+                vlog(True, f"  catres {tag}: name_mismatch "
+                           f"(expected={name3},ref={ref_res.get_resname()},"
+                           f"pred={pred_res.get_resname()})")
 
     # Only validated catres enter lDDT (catres_lddt + catres_subset_lddt) so a
     # mutated/wrong residue cannot contaminate the lDDT metric (FIX 2).
@@ -1544,7 +1598,178 @@ def analyze_prediction(
         # the AF2 scalars/global metrics aren't lost. Only a fatal absence flips
         # status to "error" (handled by fail()).
         row["error"] = ";".join(errors[:8]) + ("..." if len(errors) > 8 else "")
+
+    # --- Verbose REPORT (Change 1): reflects the FULL row, BEFORE any trim -----
+    if verbose:
+        _emit_verbose_report(row, catres_list, catres_valid, opts, warnings)
+
+    # --- Column trim (Change 2): post-build filter, computed values unchanged --
+    row = _apply_column_trim(row, catres_list, opts)
     return row, warnings
+
+
+# ------------------------------------------------------------------------------
+# Verbose REPORT + column-trim helpers (additive: see CHANGE 1 / CHANGE 2)
+# ------------------------------------------------------------------------------
+
+def _fmt_num(v: Any, ndigits: int = 3) -> str:
+    """Format a scalar to ~3-4 sig figs; 'NaN' for nan/None, str() otherwise."""
+    if v is None or v == "":
+        return "NaN"
+    try:
+        f = float(v)
+    except (TypeError, ValueError):
+        return str(v)
+    if not np.isfinite(f):
+        return "NaN"
+    return f"{f:.{ndigits}f}"
+
+
+def _per_catres_keys(catres_list: List[Dict[str, Any]]) -> List[str]:
+    """Per-catalytic-residue column names (the {name3}{i}_* family) in row order.
+
+    Reconstructs the exact key names analyze_prediction assigned for each catres
+    i (1-based): {name3}{i}_rmsd, _bb_rmsd, _plddt, _pae. Used by the column-trim
+    filter to drop ONLY these (not the catres_* aggregates).
+    """
+    keys: List[str] = []
+    for i, catres in enumerate(catres_list):
+        prefix = f"{catres['name3']}{i + 1}"
+        keys.extend([f"{prefix}_rmsd", f"{prefix}_bb_rmsd",
+                     f"{prefix}_plddt", f"{prefix}_pae"])
+    return keys
+
+
+def _pae_full_pair_keys(catres_list: List[Dict[str, Any]]) -> List[str]:
+    """The --pae_full pairwise column names {name3a}{i}_{name3b}{j}_pae (i<j)."""
+    keys: List[str] = []
+    n = len(catres_list)
+    for a in range(n):
+        for b in range(a + 1, n):
+            na = f"{catres_list[a]['name3']}{a + 1}"
+            nb = f"{catres_list[b]['name3']}{b + 1}"
+            keys.append(f"{na}_{nb}_pae")
+    return keys
+
+
+# Lean core column set (Change 2). Order is preserved; only keys present in the
+# row are emitted. The subset aggregates are appended only when --catres_subset.
+_LEAN_CORE_COLUMNS = [
+    "description", "status", "error", "catres_signature", "catres_count",
+    "af2_mean_plddt", "af2_ptm_score", "af2_mean_pae", "af2_rmsd_to_input",
+    "ca_rmsd", "tm_score",
+    "catres_rmsd", "catres_bb_rmsd", "catres_lddt", "catres_plddt",
+    "catres_pae_to_all_mean", "catres_pair_pae_mean", "catres_pair_pae_max",
+]
+_LEAN_SUBSET_COLUMNS = [
+    "catres_subset_count", "catres_subset_rmsd", "catres_subset_bb_rmsd",
+    "catres_subset_lddt", "catres_subset_plddt", "catres_subset_pae_to_all_mean",
+    "catres_subset_pair_pae_mean", "catres_subset_pair_pae_max",
+]
+
+
+def _apply_column_trim(
+    row: Dict[str, Any],
+    catres_list: List[Dict[str, Any]],
+    opts: Dict[str, Any],
+) -> Dict[str, Any]:
+    """Post-build column filter for the WRITTEN .sc (Change 2).
+
+    Selects/drops keys only -- never touches computed values. --lean wins over
+    --no_per_catres. With neither flag the row is returned unchanged (so default
+    output is byte-identical). The verbose REPORT runs BEFORE this and sees the
+    full row, so trimming never affects what is reported.
+    """
+    if opts.get("lean", False):
+        wanted = list(_LEAN_CORE_COLUMNS)
+        if opts.get("catres_subset"):
+            wanted += _LEAN_SUBSET_COLUMNS
+        # Keep only lean keys that actually exist in the row, preserving order.
+        return {k: row[k] for k in wanted if k in row}
+
+    if opts.get("no_per_catres", False):
+        drop = set(_per_catres_keys(catres_list)) | set(_pae_full_pair_keys(catres_list))
+        return {k: v for k, v in row.items() if k not in drop}
+
+    return row
+
+
+def _emit_verbose_report(
+    row: Dict[str, Any],
+    catres_list: List[Dict[str, Any]],
+    catres_valid: List[bool],
+    opts: Dict[str, Any],
+    warnings: List[str],
+) -> None:
+    """Print a grouped per-prediction REPORT (Change 1).
+
+    Reflects the FULL computation (called BEFORE any column trim). Uses log() so
+    the report is timestamped like every other line. Tolerant of a partial row
+    (e.g. an early failure) -- absent keys render as 'NaN'/'-'.
+    """
+    g = row.get  # local alias
+
+    desc = g("description", "?")
+    log("=" * 16 + f" [{desc}] " + "=" * 16)
+
+    pred_b = os.path.basename(str(g("pdb_path", "") or ""))
+    ref_b = os.path.basename(str(g("ref_path", "") or ""))
+    log(f"  inputs : pred={pred_b or '-'}  ref={ref_b or '-'}")
+
+    status = g("status", "?")
+    err = g("error", "") or ""
+    if status == "error":
+        log(f"  status : error: {err or '(unspecified)'}")
+    else:
+        log(f"  status : ok" + (f"   (notes: {err})" if err else ""))
+
+    log(f"  chains : {g('n_protein_chains', '-')} protein chain(s)")
+    log(f"  catres : {g('catres_count', 0)}  ->  {g('catres_signature', '') or '-'}")
+
+    align = f"  align  : ca_rmsd={_fmt_num(g('ca_rmsd'))}  tm_score={_fmt_num(g('tm_score'))}"
+    if opts.get("tmalign", False):
+        align += f"  ca_rmsd_TMalign={_fmt_num(g('ca_rmsd_TMalign'))}"
+    align += f"  (N_ignore={g('terminal_ignore_N', '-')} C_ignore={g('terminal_ignore_C', '-')})"
+    log(align)
+
+    log(f"  AF2    : mean_plddt={_fmt_num(g('af2_mean_plddt'))} ptm={_fmt_num(g('af2_ptm_score'))} "
+        f"mean_pae={_fmt_num(g('af2_mean_pae'))} rmsd_to_input={_fmt_num(g('af2_rmsd_to_input'))} "
+        f"recycles={g('af2_recycles', '-')} tol={_fmt_num(g('af2_tol'))} "
+        f"pae_len={g('af2_pae_length', '-')}")
+
+    if catres_list:
+        log("  catres detail:")
+        for i, catres in enumerate(catres_list):
+            prefix = f"{catres['name3']}{i + 1}"
+            label = f"{catres['name3']}{catres['res_num']}"
+            valid = catres_valid[i] if i < len(catres_valid) else False
+            if valid:
+                detail = (f"rmsd={_fmt_num(g(prefix + '_rmsd'))}  "
+                          f"bb={_fmt_num(g(prefix + '_bb_rmsd'))}  "
+                          f"plddt={_fmt_num(g(prefix + '_plddt'))}  "
+                          f"pae={_fmt_num(g(prefix + '_pae'))}")
+            else:
+                detail = "NaN (invalid/unaligned)"
+            log(f"     #{i + 1} {label:<8} {detail}")
+
+    log(f"  aggregate: catres_rmsd={_fmt_num(g('catres_rmsd'))} bb={_fmt_num(g('catres_bb_rmsd'))} "
+        f"lddt={_fmt_num(g('catres_lddt'), 4)} plddt={_fmt_num(g('catres_plddt'))} "
+        f"pae_to_all={_fmt_num(g('catres_pae_to_all_mean'))} "
+        f"pair_mean={_fmt_num(g('catres_pair_pae_mean'))} "
+        f"pair_max={_fmt_num(g('catres_pair_pae_max'))}")
+
+    if opts.get("catres_subset"):
+        log(f"  subset : count={g('catres_subset_count', '-')} "
+            f"catres_subset_rmsd={_fmt_num(g('catres_subset_rmsd'))} "
+            f"bb={_fmt_num(g('catres_subset_bb_rmsd'))} "
+            f"lddt={_fmt_num(g('catres_subset_lddt'), 4)} "
+            f"plddt={_fmt_num(g('catres_subset_plddt'))} "
+            f"pae_to_all={_fmt_num(g('catres_subset_pae_to_all_mean'))} "
+            f"pair_mean={_fmt_num(g('catres_subset_pair_pae_mean'))} "
+            f"pair_max={_fmt_num(g('catres_subset_pair_pae_max'))}")
+
+    log(f"  warnings: {', '.join(warnings) if warnings else 'none'}")
+    log("=" * 48)
 
 
 def _nanmean(values: List[float]) -> float:
@@ -1677,6 +1902,7 @@ def process_job_write_sc(args: Tuple[ResolvedJob, Dict[str, Any]]):
         write_sc_atomic(row, job.out_sc)
     except Exception as e:
         return job.description, "error", [f"write_fail:{e}"]
+    vlog(opts.get("verbose", False), f"wrote {job.out_sc}")
     return job.description, row.get("status", "ok"), warnings
 
 
@@ -1765,8 +1991,17 @@ def _run_pool(jobs: List[ResolvedJob], opts: Dict[str, Any], cpus: int,
             pd.DataFrame.from_records(rows_for_combined).to_csv(combined_csv, index=False)
             log(f"Combined CSV written: {combined_csv} ({len(rows_for_combined)} rows)")
 
+    # Report where the .sc files were written (unique output dirs).
+    out_dirs = sorted({os.path.dirname(os.path.abspath(job.out_sc)) for job in jobs})
+    if len(jobs) == 1:
+        out_loc = os.path.abspath(jobs[0].out_sc)
+    elif len(out_dirs) == 1:
+        out_loc = out_dirs[0] + os.sep
+    else:
+        out_loc = f"{len(out_dirs)} dirs: " + ", ".join(out_dirs[:5]) + (
+            f" (+{len(out_dirs) - 5} more)" if len(out_dirs) > 5 else "")
     log(f"Done. ok={statuses.get('ok', 0)} error={statuses.get('error', 0)} "
-        f"skipped={statuses.get('skipped', 0)} ({time.time() - start:.1f}s)")
+        f"skipped={statuses.get('skipped', 0)} ({time.time() - start:.1f}s); output -> {out_loc}")
 
 
 def run_single(args, opts: Dict[str, Any]) -> None:
@@ -2054,6 +2289,17 @@ Each .sc is a 2-line CSV (header + one row); 'description' is the first column.
                         help="Also emit per-pair catres PAE columns {AA}{i}_{AA}{j}_pae (i<j)")
     parser.add_argument("--no_pae", action="store_true",
                         help="Skip parsing the LxL PAE matrix entirely (faster)")
+    parser.add_argument("--no_per_catres", action="store_true",
+                        help="Drop ONLY the per-catalytic-residue columns from the written .sc "
+                             "({AA}{i}_rmsd/_bb_rmsd/_plddt/_pae and any --pae_full pair columns); "
+                             "all catres_* aggregates are kept. Post-build filter: computed values "
+                             "are unchanged and --verbose still reports the full computation.")
+    parser.add_argument("--lean", action="store_true",
+                        help="Emit ONLY the high-signal core column set (~18 cols; +8 subset "
+                             "aggregates if --catres_subset). Drops per-catres, paths, folding "
+                             "metadata, monomer-redundant, terminal_ignore and ca_rmsd_TMalign. "
+                             "Wins over --no_per_catres. Post-build filter only -- computed values "
+                             "are unchanged and --verbose still reports the full computation.")
     parser.add_argument("--N_terminus_tag_length_to_ignore", type=int, default=0,
                         help="N-terminal protein residues to ignore in global CA align (chain A)")
     parser.add_argument("--C_terminus_tag_length_to_ignore", type=int, default=0,
@@ -2134,6 +2380,8 @@ def main(argv=None) -> None:
         "c_ignore": args.C_terminus_tag_length_to_ignore,
         "catres_subset": catres_subset,
         "skip_if_sc_present": args.skip_if_sc_present,
+        "no_per_catres": args.no_per_catres,
+        "lean": args.lean,
     }
 
     if args.pred_pdb:
