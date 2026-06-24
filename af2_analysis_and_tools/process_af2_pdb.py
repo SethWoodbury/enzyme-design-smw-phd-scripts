@@ -54,9 +54,9 @@ changed and the ``--verbose`` REPORT always reflects the FULL computation):
                    _pair_pae_mean/_pair_pae_max/_pair_pae_min) PLUS the matching
                    catres_subset_* aggregates (incl. _pair_pae_min) only when
                    --catres_subset is given. --lean DROPS status, error, all
-                   per-catres columns, the --pae_full pairs, af2_model/_type/_seed/
-                   _recycles/_elapsed_time/_pae_length and ca_rmsd_TMalign. --lean
-                   wins over --no_per_catres.
+                   per-catres columns, the --pae_full pairs, and af2_model/_type/
+                   _seed/_recycles/_elapsed_time/_pae_length. ca_rmsd_TMalign is
+                   KEPT in --lean (when --tmalign). --lean wins over --no_per_catres.
 
 --------------------------------------------------------------------------------
 AF2 / superfold output facts (flat directory; one model per design is the norm)
@@ -1685,7 +1685,7 @@ _LEAN_CORE_COLUMNS = [
     "catres_signature", "catres_count",
     "af2_mean_plddt", "af2_ptm_score", "af2_mean_pae", "af2_mean_pae_intra_chain",
     "af2_rmsd_to_input", "af2_rmsd_convergence_tol",
-    "ca_rmsd", "tm_score",
+    "ca_rmsd", "tm_score", "ca_rmsd_TMalign",
     "catres_rmsd", "catres_bb_rmsd", "catres_lddt", "catres_plddt",
     "catres_pae_to_all_mean",
     "catres_pair_pae_mean", "catres_pair_pae_max", "catres_pair_pae_min",
@@ -2423,10 +2423,11 @@ Each .sc is a 2-line CSV (header + one row); 'description' is the first column.
                         help="Emit ONLY the high-signal keep-list: description, pdb_path, "
                              "af2_json_path, ref_path, catres_signature/_count, af2_mean_plddt, "
                              "af2_ptm_score, af2_mean_pae, af2_mean_pae_intra_chain, "
-                             "af2_rmsd_to_input, af2_rmsd_convergence_tol, ca_rmsd, tm_score and all catres_* "
+                             "af2_rmsd_to_input, af2_rmsd_convergence_tol, ca_rmsd, tm_score, "
+                             "ca_rmsd_TMalign (when --tmalign) and all catres_* "
                              "aggregates incl. catres_pair_pae_min (+ the catres_subset_* mirror "
                              "incl. _min when --catres_subset). Drops status/error, per-catres, "
-                             "folding metadata and ca_rmsd_TMalign. Wins over --no_per_catres. "
+                             "and folding metadata. Wins over --no_per_catres. "
                              "Post-build filter only; --verbose still reports the full computation.")
     parser.add_argument("--N_terminus_tag_length_to_ignore", type=int, default=0,
                         help="N-terminal protein residues to ignore in global CA align (chain A)")
